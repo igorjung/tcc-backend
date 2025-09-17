@@ -1,18 +1,22 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Param, 
-  Delete, 
-  Req, 
-  Put 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Req,
+  Put,
+  UseGuards,
 } from '@nestjs/common';
 
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { HashPassowrdPipe } from 'src/resources/pipes/hash-password.pipe';
+import { AuthGuard } from '../auth/auth.guard';
+import type { UserRequest } from '../auth/auth.guard';
 
 @Controller('users')
 export class UserController {
@@ -25,7 +29,7 @@ export class UserController {
   ) {
     const user = await this.service.create({
       ...data,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     return {
@@ -44,31 +48,27 @@ export class UserController {
     return await this.service.findOne(id);
   }
 
-  // @Put()
-  // async update(
-  //   @Req() req: UserRequest,
-  //   @Body() data: UpdateUserDto,
-  // ) {
-  //   const id = req.user.sub;
-  //   const user = await this.service.update(
-  //     id,
-  //     data,
-  //   );
+  @UseGuards(AuthGuard)
+  @Put()
+  async update(@Req() req: UserRequest, @Body() data: UpdateUserDto) {
+    const id = req.user.sub;
+    const user = await this.service.update(id, data);
 
-  //   return {
-  //     user,
-  //     message: 'Usuário atualizado com sucesso',
-  //   };
-  // }
+    return {
+      user,
+      message: 'Usuário atualizado com sucesso',
+    };
+  }
 
-  // @Delete()
-  // async remove(@Req() req: UserRequest) {
-  //   const id = req.user.sub;
-  //   const user = await this.service.remove(id);
+  @UseGuards(AuthGuard)
+  @Delete()
+  async remove(@Req() req: UserRequest) {
+    const id = req.user.sub;
+    const user = await this.service.remove(id);
 
-  //   return {
-  //     user,
-  //     message: 'Usuário removido com suceso',
-  //   };
-  // }
+    return {
+      user,
+      message: 'Usuário removido com suceso',
+    };
+  }
 }

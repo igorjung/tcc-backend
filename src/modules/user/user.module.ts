@@ -10,6 +10,6 @@ import { IsEmailUniqueValidator } from './validators/is-email-unique.validator';
   imports: [TypeOrmModule.forFeature([UserEntity])],
   controllers: [UserController],
   providers: [UserService, IsEmailUniqueValidator],
-  exports: [UserService]
+  exports: [UserService],
 })
 export class UserModule {}

@@ -1,11 +1,10 @@
-
-import { 
-  IsDateString, 
-  IsEmail, 
-  IsNotEmpty, 
-  Matches, 
-  MaxLength, 
-  MinLength 
+import {
+  IsDateString,
+  IsEmail,
+  IsNotEmpty,
+  Matches,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 import { isEmailUnique } from '../validators/is-email-unique.validator';
 

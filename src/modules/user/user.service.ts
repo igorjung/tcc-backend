@@ -30,20 +30,26 @@ export class UserService {
   }
 
   async findOneByEmail(email: string) {
-    const user = await this.respository.findOneBy({ email, deletedAt: undefined });
-    if (!user) throw new NotFoundException(`Este email não pertence a um usuário.`);
+    const user = await this.respository.findOneBy({
+      email,
+      deletedAt: undefined,
+    });
+    if (!user)
+      throw new NotFoundException(`Este email não pertence a um usuário.`);
     return user;
   }
 
   async update(id: string, data: UpdateUserDto) {
     const user = await this.respository.findOneBy({ id });
-    if (user === null) throw new NotFoundException('O usuário não foi encontrado.');
+    if (user === null)
+      throw new NotFoundException('O usuário não foi encontrado.');
     Object.assign(user, data);
     return this.respository.save(user);
   }
 
   async remove(id: string) {
     const response = await this.respository.delete(id);
-    if (!response.affected) throw new NotFoundException('O usuário não foi encontrado.');
+    if (!response.affected)
+      throw new NotFoundException('O usuário não foi encontrado.');
   }
 }

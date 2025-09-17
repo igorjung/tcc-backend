@@ -1,10 +1,17 @@
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  ConsoleLogger,
+  Module,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DbConfigService } from './config/db.config.service';
 import { UserModule } from './modules/user/user.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { GlobalExceptionFilter } from './resources/filters/global-excpection-filter';
+import { LoggerGlobalInterceptor } from './resources/interceptors/logger-global.interceptor';
 
 @Module({
   imports: [
@@ -16,13 +23,23 @@ import { UserModule } from './modules/user/user.module';
       inject: [DbConfigService],
     }),
     UserModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [
     {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+    {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggerGlobalInterceptor,
+    },
+    ConsoleLogger,
   ],
 })
 export class AppModule {}
