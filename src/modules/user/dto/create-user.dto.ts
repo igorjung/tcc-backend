@@ -1,18 +1,21 @@
 import {
   IsDateString,
   IsEmail,
+  IsEnum,
   IsNotEmpty,
+  IsOptional,
+  IsString,
   Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
 import { isEmailUnique } from '../validators/is-email-unique.validator';
+import { UserAvailability, UserExperience, UserRole } from 'src/enum/user.enum';
 
 export class CreateUserDto {
-  @IsNotEmpty({ message: 'O nome não pode ser vazio' })
+  @IsString({ message: 'O nome informado é inválido' })
   name: string;
 
-  @IsNotEmpty({ message: 'O e-mail não pode ser vazio' })
   @IsEmail(undefined, { message: 'O e-mail informado é inválido' })
   @isEmailUnique({ message: 'Já existe um usuário com este e-mail' })
   email: string;
@@ -28,4 +31,15 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'A data de aniversário não pode ser vazia' })
   @IsDateString()
   birthDate: Date;
+
+  @IsEnum(UserRole)
+  role: UserRole;
+
+  @IsOptional()
+  @IsEnum(UserExperience)
+  experience: UserExperience;
+
+  @IsOptional()
+  @IsEnum(UserAvailability)
+  availability: UserAvailability;
 }

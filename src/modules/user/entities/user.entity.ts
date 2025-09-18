@@ -8,6 +8,12 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 
+import {
+  UserAvailability,
+  UserExperience,
+  UserRole,
+} from '../../../enum/user.enum';
+
 @Entity({ name: 'users' })
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -23,8 +29,32 @@ export class UserEntity {
   @Column({ name: 'password', length: 255, nullable: false })
   password: string;
 
-  @Column({ name: 'birth_date' })
+  @Column({ type: 'date', name: 'birth_date', nullable: true })
   birthDate: string;
+
+  @Column({
+    name: 'role',
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.STUDENT,
+  })
+  role: UserRole;
+
+  @Column({
+    name: 'experience',
+    type: 'enum',
+    enum: UserExperience,
+    nullable: true,
+  })
+  experience: UserExperience;
+
+  @Column({
+    name: 'availability',
+    type: 'enum',
+    enum: UserAvailability,
+    nullable: true,
+  })
+  availability: UserAvailability;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: string;
