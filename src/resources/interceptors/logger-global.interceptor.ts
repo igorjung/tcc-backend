@@ -7,7 +7,8 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { Observable, tap } from 'rxjs';
-import type { UserRequest } from 'src/modules/auth/auth.guard';
+
+import { UserRequest } from '../guards/auth.guard';
 
 @Injectable()
 export class LoggerGlobalInterceptor implements NestInterceptor {

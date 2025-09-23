@@ -7,6 +7,7 @@ import { UserService } from '../user/user.service';
 export interface UserPayload {
   sub: string;
   userName: string;
+  role: string;
 }
 
 @Injectable()
@@ -27,6 +28,7 @@ export class AuthService {
     const payload: UserPayload = {
       sub: user.id,
       userName: user.name,
+      role: user.role,
     };
 
     return {
