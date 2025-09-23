@@ -7,7 +7,7 @@ O projeto consiste em uma API **RESTful** desenvolvida com **Nest.js**, utilizan
 ## Requisitos
 
 Antes de inciar, é necessário ter instalado em seu máquina: 
-- [Node](jshttps://www.nodejs.tech/pt-br/download)
+- [Node.js](https://www.nodejs.tech/pt-br/download)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 
 
@@ -94,5 +94,5 @@ src/
 ```
 
 ## Autores
-**- Igor Cássio Jung Silva**
-**- Matheus Apolinario**
+- **Igor Cássio Jung Silva**
+- **Matheus Apolinario**
