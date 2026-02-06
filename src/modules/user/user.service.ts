@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -41,6 +41,18 @@ export class UserService {
     }
   }
 
+  private async validateEmailUnique(
+    id: string,
+    data: UpdateUserDto | CreateUserDto,
+  ) {
+    const userWithSameEmail = await this.respository.findOneBy({
+      id: Not(id),
+      email: data.email,
+    });
+    if (userWithSameEmail !== null)
+      throw new BadRequestException('O email inserido já está em uso');
+  }
+
   async create(data: CreateUserDto, payload?: UserPayload) {
     this.validateCanCreateAdmin(data, payload);
     const entity = new UserEntity();
@@ -62,6 +74,8 @@ export class UserService {
   async update(id: string, data: UpdateUserDto, payload?: UserPayload) {
     this.validateUserPermission(id, payload);
     this.validateCanCreateAdmin(data, payload);
+    await this.validateEmailUnique(id, data);
+
     const user = await this.respository.findOneBy({ id });
     if (user === null)
       throw new NotFoundException('O usuário não foi encontrado.');
@@ -76,13 +90,19 @@ export class UserService {
       throw new NotFoundException('O usuário não foi encontrado.');
   }
 
-  async findOneByEmail(email: string) {
+  async findOneByEmail(email: string, isAuthRequest?: boolean) {
     const user = await this.respository.findOneBy({
       email,
       deletedAt: undefined,
     });
-    if (!user)
-      throw new NotFoundException(`Este email não pertence a um usuário.`);
+
+    if (!user) {
+      if (!isAuthRequest)
+        throw new NotFoundException(`Este email não pertence a um usuário.`);
+      else
+        throw new UnauthorizedException('O email ou a senha está incorreto.');
+    }
+
     return user;
   }
 
