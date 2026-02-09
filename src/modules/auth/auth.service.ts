@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 import { UserService } from '../user/user.service';
+import { CreateUserDto } from '../user/dto/create-user.dto';
 
 export interface UserPayload {
   sub: string;
@@ -18,7 +19,7 @@ export class AuthService {
   ) {}
 
   async login(email: string, password: string) {
-    const user = await this.userService.findOneByEmail(email);
+    const user = await this.userService.findOneByEmail(email, true);
 
     const isAuthenticated = await bcrypt.compare(password, user.password);
 
@@ -32,7 +33,13 @@ export class AuthService {
     };
 
     return {
+      user,
       token: await this.jwtService.signAsync(payload),
     };
+  }
+
+  async register(data: CreateUserDto, userPassword: string) {
+    await this.userService.create(data);
+    return this.login(data.email, userPassword);
   }
 }
