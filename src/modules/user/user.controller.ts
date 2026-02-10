@@ -220,7 +220,7 @@ export class UserController {
     };
   }
 
-  @ApiOperation({ summary: 'Seleção de usuário' })
+  @ApiOperation({ summary: 'Remoção de usuário' })
   @ApiBearerAuth()
   @ApiResponse({
     status: 201,
