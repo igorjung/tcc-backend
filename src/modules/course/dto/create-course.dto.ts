@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsString, IsUUID } from 'class-validator';
+import { IsArray, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 
 import { CourseSubject } from 'src/enum/course.enum';
 
@@ -30,6 +30,7 @@ export class CreateCourseDto {
     description: 'Requisitos do curso.',
     default: '[1,2]',
   })
+  @IsOptional()
   @IsArray()
   @IsUUID('4', { each: true })
   requirementsId: string[];

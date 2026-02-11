@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Get,
@@ -6,24 +5,26 @@ import {
   Body,
   Param,
   Delete,
-  Req,
   Put,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { AuthGuard } from 'src/resources/guards/auth.guard';
-import type { UserRequest } from 'src/resources/guards/auth.guard';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { CourseEntity } from './entities/course.entity';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { UserRole } from 'src/enum/user.enum';
+import { RolesGuard } from 'src/resources/guards/roles.guard';
+import { Roles } from 'src/resources/decorators/roles.decorator';
 
-@Controller('coursers')
+@Controller('courses')
 export class CourseController {
   constructor(private readonly service: CourseService) {}
 
   @ApiOperation({ summary: 'Cadastro de curso' })
+  @ApiBearerAuth()
   @ApiResponse({
     status: 201,
     description: 'Curso cadastrado com sucesso.',
@@ -37,11 +38,18 @@ export class CourseController {
     status: 500,
     description: 'Erro interno.',
   })
+  @Roles([UserRole.ADMIN])
+  @UseGuards(AuthGuard, RolesGuard)
   @Post()
-  async create(@Body() data: CreateCourseDto) {}
+  async create(@Body() data: CreateCourseDto) {
+    const course = await this.service.create(data);
+    return {
+      course,
+      message: 'curso criado com sucesso',
+    };
+  }
 
   @ApiOperation({ summary: 'Listagem de cursos' })
-  @ApiBearerAuth()
   @ApiResponse({
     status: 200,
     isArray: true,
@@ -57,7 +65,6 @@ export class CourseController {
   }
 
   @ApiOperation({ summary: 'Buscar um curso' })
-  @ApiBearerAuth()
   @ApiResponse({
     status: 200,
     type: CourseEntity,
@@ -71,9 +78,8 @@ export class CourseController {
     description: 'Erro interno.',
   })
   @Get(':id')
-  async findOne(@Req() req: UserRequest, @Param('id') id: string) {
-    const payload = req.user;
-    return await this.service.findOne(id, payload);
+  async findOne(@Param('id') id: string) {
+    return await this.service.findOne(id);
   }
 
   @ApiOperation({ summary: 'Atualização de curso' })
@@ -95,13 +101,16 @@ export class CourseController {
     status: 500,
     description: 'Erro interno.',
   })
-  @UseGuards(AuthGuard)
+  @Roles([UserRole.ADMIN])
+  @UseGuards(AuthGuard, RolesGuard)
   @Put(':id')
-  async update(
-    @Req() req: UserRequest,
-    @Param('id') id: string,
-    @Body() data: UpdateCourseDto,
-  ) {}
+  async update(@Param('id') id: string, @Body() data: UpdateCourseDto) {
+    const course = await this.service.update(id, data);
+    return {
+      course,
+      message: 'Curso atualizado com sucesso',
+    };
+  }
 
   @ApiOperation({ summary: 'Remoção de curso' })
   @ApiBearerAuth()
@@ -122,14 +131,14 @@ export class CourseController {
     status: 500,
     description: 'Erro interno.',
   })
-  @UseGuards(AuthGuard)
+  @Roles([UserRole.ADMIN])
+  @UseGuards(AuthGuard, RolesGuard)
   @Delete(':id')
-  async remove(@Req() req: UserRequest, @Param('id') id: string) {
-    const payload = req.user;
-    const user = await this.service.remove(id, payload);
+  async remove(@Param('id') id: string) {
+    const course = await this.service.remove(id);
 
     return {
-      user,
+      course,
       message: 'Curso removido com suceso',
     };
   }
