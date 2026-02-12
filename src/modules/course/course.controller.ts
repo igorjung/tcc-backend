@@ -7,14 +7,16 @@ import {
   Delete,
   Put,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { AuthGuard } from 'src/resources/guards/auth.guard';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { CourseEntity } from './entities/course.entity';
+import { GetCourseDto } from './dto/get-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { CourseEntity } from './entities/course.entity';
 import { UserRole } from 'src/enum/user.enum';
 import { RolesGuard } from 'src/resources/guards/roles.guard';
 import { Roles } from 'src/resources/decorators/roles.decorator';
@@ -60,8 +62,8 @@ export class CourseController {
     description: 'Erro interno.',
   })
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query() queryParams: GetCourseDto) {
+    return this.service.findAll(queryParams);
   }
 
   @ApiOperation({ summary: 'Buscar um curso' })

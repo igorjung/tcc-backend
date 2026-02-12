@@ -24,7 +24,7 @@ export class CreateCourseDto {
     default: 'JS',
   })
   @IsEnum(CourseSubject)
-  role: CourseSubject;
+  subject: CourseSubject;
 
   @ApiProperty({
     description: 'Requisitos do curso.',
