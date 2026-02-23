@@ -108,6 +108,10 @@ export class UserController {
     type: UserEntity,
   })
   @ApiResponse({
+    status: 401,
+    description: 'O usuário não tem permissão para realizar essa ação.',
+  })
+  @ApiResponse({
     status: 500,
     description: 'Erro interno.',
   })

@@ -7,9 +7,11 @@ import {
   PrimaryGeneratedColumn,
   ManyToMany,
   JoinTable,
+  OneToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { CourseSubject } from '../../../enum/course.enum';
+import { EnrollmentEntity } from '../../enrollment/entities/enrollmen.entity';
 
 @Entity({ name: 'courses' })
 export class CourseEntity {
@@ -45,7 +47,9 @@ export class CourseEntity {
   @ApiProperty({
     description: 'Requisitos do curso.',
   })
-  @ManyToMany(() => CourseEntity, (course) => course.requirements)
+  @ManyToMany(() => CourseEntity, (course) => course.requirements, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable({
     name: 'course_requirements',
     joinColumn: {
@@ -58,12 +62,6 @@ export class CourseEntity {
     },
   })
   requirements: CourseSubject;
-
-  @ApiProperty({
-    description: 'Cursos para qual é requisito.',
-  })
-  @ManyToMany(() => CourseEntity, (course) => course.requirements)
-  requirementFor: CourseEntity[];
 
   @ApiProperty({
     description: 'Data de criação do curso.',
@@ -82,4 +80,10 @@ export class CourseEntity {
   })
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: string;
+
+  @ApiProperty({
+    description: 'Matrículas do curso.',
+  })
+  @OneToMany(() => EnrollmentEntity, (enrollment) => enrollment.course)
+  enrollments: () => EnrollmentEntity[];
 }

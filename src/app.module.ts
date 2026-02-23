@@ -13,6 +13,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CourseModule } from './modules/course/course.module';
 import { GlobalExceptionFilter } from './resources/filters/global-excpection-filter';
 import { LoggerGlobalInterceptor } from './resources/interceptors/logger-global.interceptor';
+import { EnrollmentModule } from './modules/enrollment/enrollment.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { LoggerGlobalInterceptor } from './resources/interceptors/logger-global.
     UserModule,
     AuthModule,
     CourseModule,
+    EnrollmentModule,
   ],
   controllers: [],
   providers: [

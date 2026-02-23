@@ -20,7 +20,6 @@ export class CourseService {
         id: In(data.requirementsId),
       },
     });
-    console.log(data.requirementsId.length && !requirements.length);
     if (data.requirementsId.length && !requirements.length)
       throw new NotFoundException(`Requisitos não encontrados.`);
     return requirements;
@@ -65,34 +64,12 @@ export class CourseService {
   }
 
   async findOne(id: string) {
-    const course = await this.respository.find({
+    const course = await this.respository.findOne({
       where: { id, deletedAt: undefined },
       relations: ['requirements'],
     });
     if (!course) throw new NotFoundException(`Curso não encontrado.`);
     return course;
-  }
-
-  async filter(filters: UpdateCourseDto) {
-    const queryBuilder = this.respository.createQueryBuilder('course');
-
-    if (filters.title) {
-      queryBuilder.andWhere('course.title ILIKE :title', {
-        title: `%${filters.title}%`,
-      });
-    }
-
-    if (filters.description) {
-      queryBuilder.andWhere('user.description = :description', {
-        description: filters.description,
-      });
-    }
-
-    if (filters.subject) {
-      queryBuilder.andWhere('user.role = :role', { role: filters.subject });
-    }
-
-    return queryBuilder.getMany();
   }
 
   async update(id: string, data: UpdateCourseDto) {
