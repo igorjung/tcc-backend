@@ -18,7 +18,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typeorm": "typeorm-ts-node-commonjs --dataSource src/db/data-source-cli.ts"
+    "typeorm": "typeorm-ts-node-commonjs --dataSource src/db/data-source-cli.ts", 
+    "typeorm-extension": "ts-node ./node_modules/typeorm-extension/bin/cli.cjs",
+    "db:seed": "npm run typeorm-extension -- seed:run --dataSource src/db/data-source-cli.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -36,7 +38,8 @@
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "typeorm": "^0.3.26"
+    "typeorm": "^0.3.26",
+    "typeorm-extension": "^3.8.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

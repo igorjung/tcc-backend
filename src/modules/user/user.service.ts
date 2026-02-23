@@ -22,7 +22,7 @@ export class UserService {
     private readonly respository: Repository<UserEntity>,
   ) {}
 
-  private validateUserPermission(id: string, payload?: UserPayload) {
+  validateUserPermission(id: string, payload?: UserPayload) {
     if (payload?.sub !== id && payload?.role !== UserRole.ADMIN) {
       throw new UnauthorizedException(
         'O usuário não tem permissão para realizar essa ação.',
