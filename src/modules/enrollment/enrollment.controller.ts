@@ -47,7 +47,7 @@ export class EnrollmentController {
     const enrollment = await this.service.create(data, payload);
     return {
       enrollment,
-      message: 'matrícula criada com sucesso',
+      message: 'Matrícula criada com sucesso',
     };
   }
 

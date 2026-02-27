@@ -33,6 +33,11 @@ export class EnrollmentService {
     const course = await this.courseService.findOne(courseId);
     if (!course) throw new BadRequestException(`Curso não encontrado.`);
 
+    const isEnrolled = await this.respository.findOne({
+      where: { courseId, userId, deletedAt: undefined },
+    });
+    if (isEnrolled) throw new BadRequestException(`Você já iniciou esse curso`);
+
     const entity = new EnrollmentEntity();
     Object.assign(entity, { user, course });
     return await this.respository.save(entity);

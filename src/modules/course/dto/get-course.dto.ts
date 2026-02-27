@@ -1,13 +1,14 @@
 import { IsOptional } from 'class-validator';
-import { UpdateCourseDto } from './update-course.dto';
-import { CourseSubject } from 'src/enum/course.enum';
 
-export class GetCourseDto extends UpdateCourseDto {
+export class GetCourseDto {
   @IsOptional()
   title?: string;
 
   @IsOptional()
-  subject?: CourseSubject;
+  subject?: string;
+
+  @IsOptional()
+  showEnrolled?: number;
 
   @IsOptional()
   limit?: number;

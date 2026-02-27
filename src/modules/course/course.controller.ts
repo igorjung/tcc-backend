@@ -8,10 +8,12 @@ import {
   Put,
   UseGuards,
   Query,
+  Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { AuthGuard } from 'src/resources/guards/auth.guard';
+import type { UserRequest } from 'src/resources/guards/auth.guard';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { GetCourseDto } from './dto/get-course.dto';
@@ -26,7 +28,6 @@ export class CourseController {
   constructor(private readonly service: CourseService) {}
 
   @ApiOperation({ summary: 'Cadastro de curso' })
-  @ApiBearerAuth()
   @ApiResponse({
     status: 201,
     description: 'Curso cadastrado com sucesso.',
@@ -52,6 +53,7 @@ export class CourseController {
   }
 
   @ApiOperation({ summary: 'Listagem de cursos' })
+  @ApiBearerAuth()
   @ApiResponse({
     status: 200,
     isArray: true,
@@ -61,9 +63,12 @@ export class CourseController {
     status: 500,
     description: 'Erro interno.',
   })
+  @UseGuards(AuthGuard)
   @Get()
-  findAll(@Query() queryParams: GetCourseDto) {
-    return this.service.findAll(queryParams);
+  async findAll(@Req() req: UserRequest, @Query() queryParams: GetCourseDto) {
+    const payload = req.user;
+    const [data, total] = await this.service.findAll(queryParams, payload);
+    return { data, total };
   }
 
   @ApiOperation({ summary: 'Buscar um curso' })

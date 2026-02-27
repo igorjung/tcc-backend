@@ -6,6 +6,8 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { CourseEntity } from './entities/course.entity';
 import { GetCourseDto } from './dto/get-course.dto';
+import { CourseSubject } from 'src/enum/course.enum';
+import { UserPayload } from '../auth/auth.service';
 
 @Injectable()
 export class CourseService {
@@ -32,7 +34,7 @@ export class CourseService {
     return await this.respository.save(entity);
   }
 
-  async findAll(queryParams: GetCourseDto) {
+  async findAll(queryParams: GetCourseDto, payload?: UserPayload) {
     const queryBuilder = this.respository.createQueryBuilder('course');
 
     if (queryParams.title) {
@@ -41,10 +43,43 @@ export class CourseService {
       });
     }
 
-    if (queryParams.subject) {
-      queryBuilder.andWhere('course.subject = :subject', {
-        subject: queryParams.subject,
-      });
+    if (payload?.sub) {
+      if (!queryParams.showEnrolled) {
+        queryBuilder
+          .andWhere((qb) => {
+            const subQuery = qb
+              .subQuery()
+              .select('1')
+              .from('enrollments', 'enrollment')
+              .where('enrollment.courseId = course.id')
+              .andWhere('enrollment.userId = :userId')
+              .getQuery();
+
+            return `NOT EXISTS ${subQuery}`;
+          })
+          .setParameter('userId', payload.sub);
+      } else {
+        queryBuilder.leftJoinAndSelect(
+          'course.enrollments',
+          'enrollment',
+          'enrollment.userId = :userId',
+          { userId: payload.sub },
+        );
+      }
+    }
+
+    if (queryParams.subject?.length) {
+      const validSubject = queryParams.subject
+        .split(',')
+        .filter((subject) =>
+          Object.values(CourseSubject).includes(subject as CourseSubject),
+        );
+
+      if (validSubject.length) {
+        queryBuilder.andWhere('course.subject IN (:...status)', {
+          status: validSubject,
+        });
+      }
     }
 
     if (queryParams.limit) {
