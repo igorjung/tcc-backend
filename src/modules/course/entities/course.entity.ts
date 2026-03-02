@@ -12,6 +12,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { CourseSubject } from '../../../enum/course.enum';
 import { EnrollmentEntity } from '../../enrollment/entities/enrollmen.entity';
+import { LessonEntity } from '../../lesson/entities/lesson.entity';
 
 @Entity({ name: 'courses' })
 export class CourseEntity {
@@ -86,4 +87,10 @@ export class CourseEntity {
   })
   @OneToMany(() => EnrollmentEntity, (enrollment) => enrollment.course)
   enrollments: () => EnrollmentEntity[];
+
+  @ApiProperty({
+    description: 'Aulas do curso.',
+  })
+  @OneToMany(() => LessonEntity, (lesson) => lesson.course)
+  lessons: () => LessonEntity[];
 }
