@@ -7,10 +7,13 @@ import {
   Delete,
   Put,
   UseGuards,
+  Req,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { AuthGuard } from 'src/resources/guards/auth.guard';
+import type { UserRequest } from 'src/resources/guards/auth.guard';
 import { UserRole } from 'src/enum/user.enum';
 import { RolesGuard } from 'src/resources/guards/roles.guard';
 import { Roles } from 'src/resources/decorators/roles.decorator';
@@ -18,6 +21,7 @@ import { LessonService } from './lesson.service';
 import { LessonEntity } from './entities/lesson.entity';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
+import { GetLessonDto } from './dto/get-lesson.dto';
 
 @Controller('lessons')
 export class LessonController {
@@ -61,11 +65,14 @@ export class LessonController {
   })
   @UseGuards(AuthGuard)
   @Get()
-  async findAll() {
-    return await this.service.findAll();
+  async findAll(@Req() req: UserRequest, @Query() queryParams: GetLessonDto) {
+    const payload = req.user;
+    const [data, total] = await this.service.findAll(queryParams, payload);
+    return { data, total };
   }
 
   @ApiOperation({ summary: 'Buscar uma aula' })
+  @ApiBearerAuth()
   @ApiResponse({
     status: 200,
     type: LessonEntity,
@@ -78,9 +85,11 @@ export class LessonController {
     status: 500,
     description: 'Erro interno.',
   })
+  @UseGuards(AuthGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return await this.service.findOne(id);
+  async findOne(@Req() req: UserRequest, @Param('id') id: string) {
+    const payload = req.user;
+    return await this.service.findOne(id, payload);
   }
 
   @ApiOperation({ summary: 'Atualização de aula' })

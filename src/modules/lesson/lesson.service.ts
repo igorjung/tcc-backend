@@ -8,6 +8,9 @@ import { Repository } from 'typeorm';
 import { LessonEntity } from './entities/lesson.entity';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
+import { GetLessonDto } from './dto/get-lesson.dto';
+import { UserPayload } from '../auth/auth.service';
+import { UserRole } from 'src/enum/user.enum';
 
 @Injectable()
 export class LessonService {
@@ -19,36 +22,73 @@ export class LessonService {
 
   async create(data: CreateLessonDto) {
     const entity = new LessonEntity();
-    Object.assign(entity, { ...data });
+    Object.assign(entity, data);
     return await this.respository.save(entity);
   }
 
-  async findAll() {
-    return await this.respository.find({ where: { deletedAt: undefined } });
+  async findAll(queryParams: GetLessonDto, payload?: UserPayload) {
+    const queryBuilder = this.respository.createQueryBuilder('lesson');
+
+    if (payload?.role !== UserRole.ADMIN) {
+      queryBuilder
+        .innerJoin('lesson.course', 'course')
+        .innerJoin(
+          'course.enrollments',
+          'enrollment',
+          'enrollment.user_id = :userId',
+          { userId: payload?.sub },
+        );
+    }
+
+    if (queryParams.title) {
+      queryBuilder.andWhere('lesson.title ILIKE :title', {
+        title: `%${queryParams.title}%`,
+      });
+    }
+
+    if (queryParams.courseId) {
+      queryBuilder.andWhere('lesson.courseId = :courseId', {
+        courseId: queryParams.courseId,
+      });
+    }
+
+    if (queryParams.limit) {
+      queryBuilder.take(queryParams.limit);
+    }
+
+    if (queryParams.offset) {
+      queryBuilder.skip(queryParams.offset);
+    }
+
+    return queryBuilder.getManyAndCount();
   }
 
-  async findByCourse(courseId: string) {
-    return await this.respository.find({
-      where: {
-        deletedAt: undefined,
-        courseId,
-      },
-      relations: ['course'],
-    });
-  }
+  async findOne(id: string, payload?: UserPayload) {
+    const queryBuilder = this.respository
+      .createQueryBuilder('lesson')
+      .leftJoinAndSelect('lesson.course', 'course');
+    if (payload?.role !== UserRole.ADMIN) {
+      queryBuilder.innerJoin(
+        'course.enrollments',
+        'enrollment',
+        'enrollment.user_id = :userId',
+        { userId: payload?.sub },
+      );
+    }
 
-  async findOne(id: string) {
-    const where = {
-      id,
-      deletedAt: undefined,
-    };
+    const lesson = await queryBuilder
+      .leftJoinAndSelect('lesson.options', 'options')
+      .where('lesson.id = :id', {
+        id,
+      })
+      .andWhere('lesson.deleted_at IS NULL')
+      .getOne();
 
-    const enrollment = await this.respository.findOne({
-      where,
-      relations: ['course'],
-    });
-    if (!enrollment) throw new NotFoundException(`Aula não encontrada.`);
-    return enrollment;
+    if (!lesson) {
+      throw new NotFoundException('Aula não encontrada.');
+    }
+
+    return lesson;
   }
 
   async update(id: string, data: UpdateLessonDto) {
@@ -60,7 +100,9 @@ export class LessonService {
   }
 
   async remove(id: string) {
-    await this.findOne(id);
+    const lesson = await this.respository.findOneBy({ id });
+    if (lesson === null)
+      throw new NotFoundException('A aula não foi encontrada.');
 
     const response = await this.respository.delete(id);
     if (!response.affected) throw new NotFoundException('Aula não encontrada.');

@@ -12,8 +12,8 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { LessonEntity } from './lesson.entity';
 
-@Entity({ name: 'lesson-options' })
-export class LessonQuestionEntity {
+@Entity({ name: 'lesson_options' })
+export class LessonOptionEntity {
   @ApiProperty({
     description: 'Id da opção de resposta.',
   })
@@ -36,6 +36,12 @@ export class LessonQuestionEntity {
   })
   @Column({ name: 'content', nullable: false })
   content: string;
+
+  @ApiProperty({
+    description: 'Opção de resposta está correta?',
+  })
+  @Column({ name: 'is_correct', nullable: true })
+  isCorrect: boolean;
 
   @ApiProperty({
     description: 'Data de criação da opção de resposta.',

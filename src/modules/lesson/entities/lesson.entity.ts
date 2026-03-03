@@ -8,13 +8,11 @@ import {
   JoinColumn,
   Column,
   OneToMany,
-  OneToOne,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
 import { CourseEntity } from '../../course/entities/course.entity';
-import { LessonQuestionEntity } from './lessonOption.entity';
-import { Exclude } from 'class-transformer';
+import { LessonOptionEntity } from './lessonOption.entity';
 
 @Entity({ name: 'lessons' })
 export class LessonEntity {
@@ -80,16 +78,9 @@ export class LessonEntity {
   @ApiProperty({
     description: 'Opções de resposta.',
   })
-  @OneToMany(() => LessonQuestionEntity, (option) => option.lesson)
-  options: () => LessonQuestionEntity[];
-
-  @Exclude()
-  @ApiProperty({
-    description: 'Resposta correta.',
+  @OneToMany(() => LessonOptionEntity, (option) => option.lesson, {
+    cascade: true,
+    eager: true,
   })
-  @OneToOne(() => LessonQuestionEntity, (option) => option.id)
-  @JoinColumn({ name: 'answer_id' })
-  answer: () => LessonQuestionEntity;
-  @Column({ name: 'answer_id' })
-  answerId: string;
+  options: () => LessonOptionEntity[];
 }
