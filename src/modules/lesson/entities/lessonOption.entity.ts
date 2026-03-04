@@ -40,7 +40,7 @@ export class LessonOptionEntity {
   @ApiProperty({
     description: 'Opção de resposta está correta?',
   })
-  @Column({ name: 'is_correct', nullable: true })
+  @Column({ name: 'is_correct', nullable: true, select: false })
   isCorrect: boolean;
 
   @ApiProperty({

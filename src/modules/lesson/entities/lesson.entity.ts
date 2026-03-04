@@ -13,6 +13,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { CourseEntity } from '../../course/entities/course.entity';
 import { LessonOptionEntity } from './lessonOption.entity';
+import { LessonAttemptEntity } from '../../lessonAttempt/entities/lessonAttempt.entity';
 
 @Entity({ name: 'lessons' })
 export class LessonEntity {
@@ -83,4 +84,10 @@ export class LessonEntity {
     eager: true,
   })
   options: () => LessonOptionEntity[];
+
+  @ApiProperty({
+    description: 'Respostas da atividade.',
+  })
+  @OneToMany(() => LessonAttemptEntity, (attempt) => attempt.lesson)
+  attempts: () => LessonAttemptEntity[];
 }

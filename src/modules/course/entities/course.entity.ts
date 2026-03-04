@@ -62,7 +62,7 @@ export class CourseEntity {
       referencedColumnName: 'id',
     },
   })
-  requirements: CourseSubject;
+  requirements: CourseEntity[];
 
   @ApiProperty({
     description: 'Data de criação do curso.',

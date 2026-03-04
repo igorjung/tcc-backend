@@ -16,18 +16,18 @@ import { UserRole } from 'src/enum/user.enum';
 export class LessonService {
   constructor(
     @InjectRepository(LessonEntity)
-    private readonly respository: Repository<LessonEntity>,
+    private readonly repository: Repository<LessonEntity>,
     // private courseService: CourseService,
   ) {}
 
   async create(data: CreateLessonDto) {
     const entity = new LessonEntity();
     Object.assign(entity, data);
-    return await this.respository.save(entity);
+    return await this.repository.save(entity);
   }
 
   async findAll(queryParams: GetLessonDto, payload?: UserPayload) {
-    const queryBuilder = this.respository.createQueryBuilder('lesson');
+    const queryBuilder = this.repository.createQueryBuilder('lesson');
 
     if (payload?.role !== UserRole.ADMIN) {
       queryBuilder
@@ -64,7 +64,7 @@ export class LessonService {
   }
 
   async findOne(id: string, payload?: UserPayload) {
-    const queryBuilder = this.respository
+    const queryBuilder = this.repository
       .createQueryBuilder('lesson')
       .leftJoinAndSelect('lesson.course', 'course');
     if (payload?.role !== UserRole.ADMIN) {
@@ -92,19 +92,19 @@ export class LessonService {
   }
 
   async update(id: string, data: UpdateLessonDto) {
-    const lesson = await this.respository.findOneBy({ id });
+    const lesson = await this.repository.findOneBy({ id });
     if (lesson === null)
       throw new NotFoundException('A aula não foi encontrada.');
     Object.assign(lesson, data);
-    return this.respository.save(lesson);
+    return this.repository.save(lesson);
   }
 
   async remove(id: string) {
-    const lesson = await this.respository.findOneBy({ id });
+    const lesson = await this.repository.findOneBy({ id });
     if (lesson === null)
       throw new NotFoundException('A aula não foi encontrada.');
 
-    const response = await this.respository.delete(id);
+    const response = await this.repository.delete(id);
     if (!response.affected) throw new NotFoundException('Aula não encontrada.');
   }
 }

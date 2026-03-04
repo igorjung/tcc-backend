@@ -15,6 +15,7 @@ import { GlobalExceptionFilter } from './resources/filters/global-excpection-fil
 import { LoggerGlobalInterceptor } from './resources/interceptors/logger-global.interceptor';
 import { EnrollmentModule } from './modules/enrollment/enrollment.module';
 import { LessonModule } from './modules/lesson/lesson.module';
+import { LessonAttemptModule } from './modules/lessonAttempt/lessonAttempt.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { LessonModule } from './modules/lesson/lesson.module';
     CourseModule,
     EnrollmentModule,
     LessonModule,
+    LessonAttemptModule,
   ],
   controllers: [],
   providers: [

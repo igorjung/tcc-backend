@@ -7,16 +7,18 @@ import {
   ManyToOne,
   JoinColumn,
   Column,
+  OneToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
 import { UserEntity } from '../../user/entities/user.entity';
 import { CourseEntity } from '../../course/entities/course.entity';
+import { LessonAttemptEntity } from '../../lessonAttempt/entities/lessonAttempt.entity';
 
 @Entity({ name: 'enrollments' })
 export class EnrollmentEntity {
   @ApiProperty({
-    description: 'Id do matrícula.',
+    description: 'Id da matrícula.',
   })
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -72,4 +74,10 @@ export class EnrollmentEntity {
   })
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: string;
+
+  @ApiProperty({
+    description: 'Respostas do curso matrículado.',
+  })
+  @OneToMany(() => LessonAttemptEntity, (attempt) => attempt.enrollment)
+  lessonAttempts: () => LessonAttemptEntity[];
 }
