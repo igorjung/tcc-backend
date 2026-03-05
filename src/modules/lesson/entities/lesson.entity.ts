@@ -83,7 +83,7 @@ export class LessonEntity {
     cascade: true,
     eager: true,
   })
-  options: () => LessonOptionEntity[];
+  options: LessonOptionEntity[];
 
   @ApiProperty({
     description: 'Respostas da atividade.',

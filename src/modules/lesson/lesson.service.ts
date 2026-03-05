@@ -1,27 +1,33 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-// import { UserPayload } from '../auth/auth.service';
-// import { CourseService } from '../course/course.service';
-// import { UserRole } from 'src/enum/user.enum';
 import { LessonEntity } from './entities/lesson.entity';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { GetLessonDto } from './dto/get-lesson.dto';
 import { UserPayload } from '../auth/auth.service';
 import { UserRole } from 'src/enum/user.enum';
+import { CourseService } from '../course/course.service';
 
 @Injectable()
 export class LessonService {
   constructor(
     @InjectRepository(LessonEntity)
     private readonly repository: Repository<LessonEntity>,
-    // private courseService: CourseService,
+    private courseService: CourseService,
   ) {}
 
   async create(data: CreateLessonDto) {
     const entity = new LessonEntity();
+
+    const course = await this.courseService.findOne(data.courseId);
+    if (!course) throw new BadRequestException(`Curso não encontrado.`);
+
     Object.assign(entity, data);
     return await this.repository.save(entity);
   }
@@ -63,7 +69,7 @@ export class LessonService {
     return queryBuilder.getManyAndCount();
   }
 
-  async findOne(id: string, payload?: UserPayload) {
+  async findOne(id: string, payload: UserPayload) {
     const queryBuilder = this.repository
       .createQueryBuilder('lesson')
       .leftJoinAndSelect('lesson.course', 'course');
