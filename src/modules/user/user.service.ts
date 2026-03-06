@@ -19,7 +19,7 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly respository: Repository<UserEntity>,
+    private readonly repository: Repository<UserEntity>,
   ) {}
 
   validateUserPermission(id: string, payload?: UserPayload) {
@@ -45,7 +45,7 @@ export class UserService {
     id: string,
     data: UpdateUserDto | CreateUserDto,
   ) {
-    const userWithSameEmail = await this.respository.findOneBy({
+    const userWithSameEmail = await this.repository.findOneBy({
       id: Not(id),
       email: data.email,
     });
@@ -57,16 +57,16 @@ export class UserService {
     this.validateCanCreateAdmin(data, payload);
     const entity = new UserEntity();
     Object.assign(entity, data);
-    return await this.respository.save(entity);
+    return await this.repository.save(entity);
   }
 
   async findAll() {
-    return await this.respository.find({ where: { deletedAt: undefined } });
+    return await this.repository.find({ where: { deletedAt: undefined } });
   }
 
   async findOne(id: string, payload?: UserPayload) {
     this.validateUserPermission(id, payload);
-    const user = await this.respository.findOneBy({ id, deletedAt: undefined });
+    const user = await this.repository.findOneBy({ id, deletedAt: undefined });
     if (!user) throw new NotFoundException(`Usário não encontrado.`);
     return user;
   }
@@ -76,22 +76,22 @@ export class UserService {
     this.validateCanCreateAdmin(data, payload);
     await this.validateEmailUnique(id, data);
 
-    const user = await this.respository.findOneBy({ id });
+    const user = await this.repository.findOneBy({ id });
     if (user === null)
       throw new NotFoundException('O usuário não foi encontrado.');
     Object.assign(user, data);
-    return this.respository.save(user);
+    return this.repository.save(user);
   }
 
   async remove(id: string, payload?: UserPayload) {
     this.validateUserPermission(id, payload);
-    const response = await this.respository.delete(id);
+    const response = await this.repository.delete(id);
     if (!response.affected)
       throw new NotFoundException('O usuário não foi encontrado.');
   }
 
   async findOneByEmail(email: string, isAuthRequest?: boolean) {
-    const user = await this.respository.findOneBy({
+    const user = await this.repository.findOneBy({
       email,
       deletedAt: undefined,
     });
@@ -111,7 +111,7 @@ export class UserService {
     data: UpdatePasswordDto,
     hashedPassword: string,
   ) {
-    const user = await this.respository.findOneBy({ id });
+    const user = await this.repository.findOneBy({ id });
 
     if (user === null)
       throw new NotFoundException('O usuário não foi encontrado.');
@@ -130,6 +130,6 @@ export class UserService {
       );
 
     Object.assign(user, { password: hashedPassword });
-    return this.respository.save(user);
+    return this.repository.save(user);
   }
 }

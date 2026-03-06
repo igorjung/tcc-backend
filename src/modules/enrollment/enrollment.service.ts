@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { EnrollmentEntity } from './entities/enrollmen.entity';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
@@ -13,15 +13,77 @@ import { UserPayload } from '../auth/auth.service';
 import { CourseService } from '../course/course.service';
 import { UserRole } from 'src/enum/user.enum';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
+import { CourseEntity } from '../course/entities/course.entity';
 
 @Injectable()
 export class EnrollmentService {
   constructor(
     @InjectRepository(EnrollmentEntity)
-    private readonly respository: Repository<EnrollmentEntity>,
+    private readonly repository: Repository<EnrollmentEntity>,
     private userService: UserService,
     private courseService: CourseService,
   ) {}
+
+  private async validateRequirements(course: CourseEntity, userId: string) {
+    const { requirements } = course;
+
+    const requirementIds = requirements.map((r) => r.id);
+
+    if (requirementIds.length > 0) {
+      const completedRequirements = await this.repository.find({
+        where: {
+          courseId: In(requirementIds),
+          userId,
+          isCompleted: true,
+        },
+      });
+
+      if (completedRequirements.length !== requirementIds.length) {
+        throw new BadRequestException(
+          'Você precisa concluir todos os pré-requisitos antes de iniciar esse curso.',
+        );
+      }
+    }
+  }
+
+  async validateCourseCompleted(id: string) {
+    const enrollment = await this.repository
+      .createQueryBuilder('enrollment')
+      .leftJoinAndSelect('enrollment.course', 'course')
+      .leftJoinAndSelect('course.lessons', 'lesson')
+      .leftJoinAndSelect('lesson.options', 'option')
+      .addSelect('option.isCorrect')
+      .leftJoinAndSelect('enrollment.lessonAttempts', 'attempt')
+      .leftJoinAndSelect('attempt.lessonOption', 'answer')
+      .addSelect('answer.isCorrect')
+      .where('enrollment.id = :id', { id })
+      .andWhere('enrollment.deleted_at IS NULL')
+      .getOne();
+
+    if (!enrollment) return false;
+    const { lessonAttempts } = enrollment;
+    const { lessons } = enrollment.course;
+
+    const isCompleted = lessonAttempts.length === lessons.length;
+
+    if (!isCompleted) return false;
+
+    let correctAnswers = 0;
+    lessonAttempts.forEach((attempt) => {
+      const answer = lessons
+        .find((item) => item.id === attempt.lessonId)
+        ?.options.find((option) => option.isCorrect);
+
+      if (answer && answer.id === attempt.lessonOptionId) correctAnswers++;
+    });
+
+    const grade = correctAnswers / lessons.length;
+
+    Object.assign(enrollment, { isCompleted: true, grade });
+    await this.repository.save(enrollment);
+
+    return true;
+  }
 
   async create(data: CreateEnrollmentDto, payload?: UserPayload) {
     const { userId, courseId } = data;
@@ -33,22 +95,25 @@ export class EnrollmentService {
     const course = await this.courseService.findOne(courseId);
     if (!course) throw new BadRequestException(`Curso não encontrado.`);
 
-    const isEnrolled = await this.respository.findOne({
+    const isEnrolled = await this.repository.findOne({
       where: { courseId, userId, deletedAt: undefined },
     });
-    if (isEnrolled) throw new BadRequestException(`Você já iniciou esse curso`);
+    if (isEnrolled)
+      throw new BadRequestException(`Você já iniciou esse curso.`);
+
+    await this.validateRequirements(course, userId);
 
     const entity = new EnrollmentEntity();
     Object.assign(entity, { user, course });
-    return await this.respository.save(entity);
+    return await this.repository.save(entity);
   }
 
   async findAll() {
-    return await this.respository.find({ where: { deletedAt: undefined } });
+    return await this.repository.find({ where: { deletedAt: undefined } });
   }
 
   async findByUser(payload: UserPayload) {
-    return await this.respository.find({
+    return await this.repository.find({
       where: {
         deletedAt: undefined,
         userId: payload.sub,
@@ -64,7 +129,7 @@ export class EnrollmentService {
       userId: payload.role === UserRole.ADMIN ? undefined : payload.sub,
     };
 
-    const enrollment = await this.respository.findOne({
+    const enrollment = await this.repository.findOne({
       where,
       relations: ['user', 'course'],
     });
@@ -76,13 +141,13 @@ export class EnrollmentService {
     const enrollment = await this.findOne(id, payload);
 
     Object.assign(enrollment, data);
-    return this.respository.save(enrollment);
+    return this.repository.save(enrollment);
   }
 
   async remove(id: string, payload: UserPayload) {
     await this.findOne(id, payload);
 
-    const response = await this.respository.delete(id);
+    const response = await this.repository.delete(id);
     if (!response.affected)
       throw new NotFoundException('Matrícula não encontrada.');
   }

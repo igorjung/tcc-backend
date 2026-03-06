@@ -13,11 +13,11 @@ import { UserPayload } from '../auth/auth.service';
 export class CourseService {
   constructor(
     @InjectRepository(CourseEntity)
-    private readonly respository: Repository<CourseEntity>,
+    private readonly repository: Repository<CourseEntity>,
   ) {}
 
   private async getCourseRequirements(data: CreateCourseDto) {
-    const requirements = await this.respository.find({
+    const requirements = await this.repository.find({
       where: {
         id: In(data.requirementsId),
       },
@@ -31,11 +31,11 @@ export class CourseService {
     const requirements = await this.getCourseRequirements(data);
     const entity = new CourseEntity();
     Object.assign(entity, { ...data, requirements });
-    return await this.respository.save(entity);
+    return await this.repository.save(entity);
   }
 
   async findAll(queryParams: GetCourseDto, payload?: UserPayload) {
-    const queryBuilder = this.respository.createQueryBuilder('course');
+    const queryBuilder = this.repository.createQueryBuilder('course');
 
     if (queryParams.title) {
       queryBuilder.andWhere('course.title ILIKE :title', {
@@ -99,24 +99,24 @@ export class CourseService {
   }
 
   async findOne(id: string) {
-    const course = await this.respository.findOne({
+    const course = await this.repository.findOne({
       where: { id, deletedAt: undefined },
-      relations: ['requirements'],
+      relations: ['requirements', 'lessons'],
     });
     if (!course) throw new NotFoundException(`Curso não encontrado.`);
     return course;
   }
 
   async update(id: string, data: UpdateCourseDto) {
-    const course = await this.respository.findOneBy({ id });
+    const course = await this.repository.findOneBy({ id });
     if (course === null)
       throw new NotFoundException('O curso não foi encontrado.');
     Object.assign(course, data);
-    return this.respository.save(course);
+    return this.repository.save(course);
   }
 
   async remove(id: string) {
-    const response = await this.respository.delete(id);
+    const response = await this.repository.delete(id);
     if (!response.affected)
       throw new NotFoundException('O curso não foi encontrado.');
   }
