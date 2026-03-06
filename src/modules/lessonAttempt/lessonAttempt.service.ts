@@ -24,9 +24,10 @@ export class LessonAttemptService {
     private userService: UserService,
   ) {}
 
-  async create(data: CreateLessonAttemptDto, payload: UserPayload) {
-    const entity = new LessonAttemptEntity();
-
+  private async validateCanCreateAttempt(
+    data: CreateLessonAttemptDto,
+    payload: UserPayload,
+  ) {
     const enrollment = await this.enrollmentService.findOne(
       data.enrollmentId,
       payload,
@@ -46,8 +47,32 @@ export class LessonAttemptService {
     if (!lesson.options.find((option) => option.id === data.lessonOptionId))
       throw new BadRequestException(`Alternativa de resposta não encontrada.`);
 
+    const prevAttempt = await this.repository.findOne({
+      where: {
+        enrollmentId: enrollment.id,
+        lessonId: lesson.id,
+      },
+    });
+    if (prevAttempt)
+      throw new BadRequestException(
+        `Você já respondeu esse questionário antes. É permitido apenas uma resposta por usuário.`,
+      );
+  }
+
+  async create(data: CreateLessonAttemptDto, payload: UserPayload) {
+    const entity = new LessonAttemptEntity();
+
+    await this.validateCanCreateAttempt(data, payload);
+
     Object.assign(entity, data);
-    return await this.repository.save(entity);
+    await this.repository.save(entity);
+
+    const isCompleted = await this.enrollmentService.validateCourseCompleted(
+      data.enrollmentId,
+    );
+    return isCompleted
+      ? 'Parabéns! Você concluiu um curso.'
+      : 'Resposta criada com sucesso.';
   }
 
   async findAll(payload?: UserPayload) {

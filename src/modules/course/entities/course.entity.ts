@@ -86,11 +86,11 @@ export class CourseEntity {
     description: 'Matrículas do curso.',
   })
   @OneToMany(() => EnrollmentEntity, (enrollment) => enrollment.course)
-  enrollments: () => EnrollmentEntity[];
+  enrollments: EnrollmentEntity[];
 
   @ApiProperty({
     description: 'Aulas do curso.',
   })
   @OneToMany(() => LessonEntity, (lesson) => lesson.course)
-  lessons: () => LessonEntity[];
+  lessons: LessonEntity[];
 }

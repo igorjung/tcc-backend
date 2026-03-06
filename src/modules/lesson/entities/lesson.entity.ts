@@ -89,5 +89,5 @@ export class LessonEntity {
     description: 'Respostas da atividade.',
   })
   @OneToMany(() => LessonAttemptEntity, (attempt) => attempt.lesson)
-  attempts: () => LessonAttemptEntity[];
+  attempts: LessonAttemptEntity[];
 }

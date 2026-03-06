@@ -41,7 +41,7 @@ export class EnrollmentEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'course_id' })
-  course: () => CourseEntity;
+  course: CourseEntity;
   @Column({ name: 'course_id' })
   courseId: string;
 
@@ -79,5 +79,5 @@ export class EnrollmentEntity {
     description: 'Respostas do curso matrículado.',
   })
   @OneToMany(() => LessonAttemptEntity, (attempt) => attempt.enrollment)
-  lessonAttempts: () => LessonAttemptEntity[];
+  lessonAttempts: LessonAttemptEntity[];
 }

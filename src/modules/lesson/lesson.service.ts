@@ -33,17 +33,17 @@ export class LessonService {
   }
 
   async findAll(queryParams: GetLessonDto, payload?: UserPayload) {
-    const queryBuilder = this.repository.createQueryBuilder('lesson');
+    const queryBuilder = this.repository
+      .createQueryBuilder('lesson')
+      .leftJoinAndSelect('lesson.course', 'course');
 
     if (payload?.role !== UserRole.ADMIN) {
-      queryBuilder
-        .innerJoin('lesson.course', 'course')
-        .innerJoin(
-          'course.enrollments',
-          'enrollment',
-          'enrollment.user_id = :userId',
-          { userId: payload?.sub },
-        );
+      queryBuilder.innerJoin(
+        'course.enrollments',
+        'enrollment',
+        'enrollment.user_id = :userId',
+        { userId: payload?.sub },
+      );
     }
 
     if (queryParams.title) {

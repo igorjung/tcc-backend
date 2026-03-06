@@ -46,6 +46,45 @@ export class EnrollmentService {
     }
   }
 
+  async validateCourseCompleted(id: string) {
+    const enrollment = await this.repository
+      .createQueryBuilder('enrollment')
+      .leftJoinAndSelect('enrollment.course', 'course')
+      .leftJoinAndSelect('course.lessons', 'lesson')
+      .leftJoinAndSelect('lesson.options', 'option')
+      .addSelect('option.isCorrect')
+      .leftJoinAndSelect('enrollment.lessonAttempts', 'attempt')
+      .leftJoinAndSelect('attempt.lessonOption', 'answer')
+      .addSelect('answer.isCorrect')
+      .where('enrollment.id = :id', { id })
+      .andWhere('enrollment.deleted_at IS NULL')
+      .getOne();
+
+    if (!enrollment) return false;
+    const { lessonAttempts } = enrollment;
+    const { lessons } = enrollment.course;
+
+    const isCompleted = lessonAttempts.length === lessons.length;
+
+    if (!isCompleted) return false;
+
+    let correctAnswers = 0;
+    lessonAttempts.forEach((attempt) => {
+      const answer = lessons
+        .find((item) => item.id === attempt.lessonId)
+        ?.options.find((option) => option.isCorrect);
+
+      if (answer && answer.id === attempt.lessonOptionId) correctAnswers++;
+    });
+
+    const grade = correctAnswers / lessons.length;
+
+    Object.assign(enrollment, { isCompleted: true, grade });
+    await this.repository.save(enrollment);
+
+    return true;
+  }
+
   async create(data: CreateEnrollmentDto, payload?: UserPayload) {
     const { userId, courseId } = data;
     this.userService.validateUserPermission(userId, payload);

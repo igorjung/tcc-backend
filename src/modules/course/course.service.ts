@@ -101,7 +101,7 @@ export class CourseService {
   async findOne(id: string) {
     const course = await this.repository.findOne({
       where: { id, deletedAt: undefined },
-      relations: ['requirements'],
+      relations: ['requirements', 'lessons'],
     });
     if (!course) throw new NotFoundException(`Curso não encontrado.`);
     return course;

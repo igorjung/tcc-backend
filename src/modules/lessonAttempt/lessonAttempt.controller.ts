@@ -42,10 +42,9 @@ export class LessonAttemptController {
   async create(@Req() req: UserRequest, @Body() data: CreateLessonAttemptDto) {
     const payload = req.user;
 
-    const lesson = await this.service.create(data, payload);
+    const message = await this.service.create(data, payload);
     return {
-      lesson,
-      message: 'resposta criada com sucesso',
+      message,
     };
   }
 
@@ -112,10 +111,10 @@ export class LessonAttemptController {
   @UseGuards(AuthGuard, RolesGuard)
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    const lesson = await this.service.remove(id);
+    const lessonAttempt = await this.service.remove(id);
 
     return {
-      lesson,
+      lessonAttempt,
       message: 'Resposta removida com suceso',
     };
   }
