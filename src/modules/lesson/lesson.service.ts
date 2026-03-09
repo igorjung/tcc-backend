@@ -38,12 +38,22 @@ export class LessonService {
       .leftJoinAndSelect('lesson.course', 'course');
 
     if (payload?.role !== UserRole.ADMIN) {
-      queryBuilder.innerJoin(
-        'course.enrollments',
-        'enrollment',
-        'enrollment.user_id = :userId',
-        { userId: payload?.sub },
-      );
+      queryBuilder
+        .innerJoin(
+          'course.enrollments',
+          'enrollment',
+          'enrollment.user_id = :userId',
+          { userId: payload?.sub },
+        )
+        .where(
+          '(enrollment.isCompleted != true OR enrollment.isCompleted IS NULL)',
+        )
+        .leftJoin(
+          'lesson.attempts',
+          'attempt',
+          'attempt.enrollment_id = enrollment.id',
+        )
+        .andWhere('attempt.id IS NULL');
     }
 
     if (queryParams.title) {

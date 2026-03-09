@@ -55,7 +55,7 @@ export class EnrollmentEntity {
     description: 'O curso foi finalizado?',
   })
   @Column({ type: 'boolean', name: 'is_completed', nullable: true })
-  isCompleted?: boolean;
+  isCompleted?: boolean | null;
 
   @ApiProperty({
     description: 'Data de criação do matrícula.',

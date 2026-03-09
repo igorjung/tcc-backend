@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { FindOperator, In, IsNull, Repository } from 'typeorm';
 
 import { EnrollmentEntity } from './entities/enrollmen.entity';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
@@ -14,6 +14,7 @@ import { CourseService } from '../course/course.service';
 import { UserRole } from 'src/enum/user.enum';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 import { CourseEntity } from '../course/entities/course.entity';
+import { GetEnrollmentDto } from './dto/get-enrollment.dto';
 
 @Injectable()
 export class EnrollmentService {
@@ -112,12 +113,23 @@ export class EnrollmentService {
     return await this.repository.find({ where: { deletedAt: undefined } });
   }
 
-  async findByUser(payload: UserPayload) {
+  async findByUser(payload: UserPayload, queryParams?: GetEnrollmentDto) {
+    const where: {
+      deletedAt: undefined;
+      userId: string;
+      isCompleted?: boolean | FindOperator<any>;
+    } = {
+      deletedAt: undefined,
+      userId: payload.sub,
+    };
+
+    if (queryParams?.isCompleted !== undefined) {
+      where.isCompleted =
+        Number(queryParams.isCompleted) === 1 ? true : IsNull();
+    }
+
     return await this.repository.find({
-      where: {
-        deletedAt: undefined,
-        userId: payload.sub,
-      },
+      where,
       relations: ['course'],
     });
   }
