@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOperator, In, IsNull, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { EnrollmentEntity } from './entities/enrollmen.entity';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
@@ -15,6 +15,7 @@ import { UserRole } from 'src/enum/user.enum';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 import { CourseEntity } from '../course/entities/course.entity';
 import { GetEnrollmentDto } from './dto/get-enrollment.dto';
+import { CourseSubject } from 'src/enum/course.enum';
 
 @Injectable()
 export class EnrollmentService {
@@ -113,25 +114,52 @@ export class EnrollmentService {
     return await this.repository.find({ where: { deletedAt: undefined } });
   }
 
-  async findByUser(payload: UserPayload, queryParams?: GetEnrollmentDto) {
-    const where: {
-      deletedAt: undefined;
-      userId: string;
-      isCompleted?: boolean | FindOperator<any>;
-    } = {
-      deletedAt: undefined,
-      userId: payload.sub,
-    };
+  async findByUser(payload: UserPayload, queryParams: GetEnrollmentDto) {
+    const queryBuilder = this.repository
+      .createQueryBuilder('enrollment')
+      .leftJoinAndSelect('enrollment.course', 'course');
 
-    if (queryParams?.isCompleted !== undefined) {
-      where.isCompleted =
-        Number(queryParams.isCompleted) === 1 ? true : IsNull();
+    if (payload?.role !== UserRole.ADMIN) {
+      queryBuilder.where('enrollment.user_id = :userId', {
+        userId: payload?.sub,
+      });
     }
 
-    return await this.repository.find({
-      where,
-      relations: ['course'],
-    });
+    if (queryParams.title) {
+      queryBuilder.andWhere('course.title ILIKE :title', {
+        title: `%${queryParams.title}%`,
+      });
+    }
+
+    if (queryParams.subject?.length) {
+      const validSubject = queryParams.subject
+        .split(',')
+        .filter((subject) =>
+          Object.values(CourseSubject).includes(subject as CourseSubject),
+        );
+
+      if (validSubject.length) {
+        queryBuilder.andWhere('course.subject IN (:...status)', {
+          status: validSubject,
+        });
+      }
+    }
+
+    if (Number(queryParams.isCompleted) === 1) {
+      queryBuilder.andWhere('enrollment.isCompleted = true');
+    } else {
+      queryBuilder.andWhere('enrollment.isCompleted isNull');
+    }
+
+    if (queryParams.limit) {
+      queryBuilder.take(queryParams.limit);
+    }
+
+    if (queryParams.offset) {
+      queryBuilder.skip(queryParams.offset);
+    }
+
+    return queryBuilder.getManyAndCount();
   }
 
   async findOne(id: string, payload: UserPayload) {

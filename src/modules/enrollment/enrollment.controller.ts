@@ -95,7 +95,8 @@ export class EnrollmentController {
     @Query() queryParams: GetEnrollmentDto,
   ) {
     const payload = req.user;
-    return await this.service.findByUser(payload, queryParams);
+    const [data, total] = await this.service.findByUser(payload, queryParams);
+    return { data, total };
   }
 
   @ApiOperation({ summary: 'Buscar uma matrícula' })
