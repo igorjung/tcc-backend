@@ -70,9 +70,11 @@ export class LessonAttemptService {
     const isCompleted = await this.enrollmentService.validateCourseCompleted(
       data.enrollmentId,
     );
-    return isCompleted
-      ? 'Parabéns! Você concluiu um curso.'
-      : 'Resposta criada com sucesso.';
+    const isCorrect = await this.lessonService.validateLessonAnswer(
+      data.lessonOptionId,
+    );
+
+    return { isCompleted, isCorrect };
   }
 
   async findAll(payload?: UserPayload) {

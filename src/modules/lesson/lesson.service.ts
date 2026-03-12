@@ -13,12 +13,15 @@ import { GetLessonDto } from './dto/get-lesson.dto';
 import { UserPayload } from '../auth/auth.service';
 import { UserRole } from 'src/enum/user.enum';
 import { CourseService } from '../course/course.service';
+import { LessonOptionEntity } from './entities/lessonOption.entity';
 
 @Injectable()
 export class LessonService {
   constructor(
     @InjectRepository(LessonEntity)
     private readonly repository: Repository<LessonEntity>,
+    @InjectRepository(LessonOptionEntity)
+    private readonly optionRepository: Repository<LessonOptionEntity>,
     private courseService: CourseService,
   ) {}
 
@@ -122,5 +125,16 @@ export class LessonService {
 
     const response = await this.repository.delete(id);
     if (!response.affected) throw new NotFoundException('Aula não encontrada.');
+  }
+
+  async validateLessonAnswer(optionId: string) {
+    const option = await this.optionRepository
+      .createQueryBuilder('option')
+      .addSelect('option.isCorrect')
+      .where('option.id = :id', { id: optionId })
+      .getOne();
+
+    if (!option) throw new NotFoundException('Alternativa não encontrada.');
+    return !!option.isCorrect;
   }
 }
