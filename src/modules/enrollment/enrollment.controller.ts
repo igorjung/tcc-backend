@@ -8,6 +8,7 @@ import {
   UseGuards,
   Req,
   Put,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
@@ -20,6 +21,7 @@ import { RolesGuard } from 'src/resources/guards/roles.guard';
 import { Roles } from 'src/resources/decorators/roles.decorator';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
+import { GetEnrollmentDto } from './dto/get-enrollment.dto';
 
 @Controller('enrollments')
 export class EnrollmentController {
@@ -88,9 +90,13 @@ export class EnrollmentController {
   })
   @UseGuards(AuthGuard)
   @Get('/by-user')
-  async findByUser(@Req() req: UserRequest) {
+  async findByUser(
+    @Req() req: UserRequest,
+    @Query() queryParams: GetEnrollmentDto,
+  ) {
     const payload = req.user;
-    return await this.service.findByUser(payload);
+    const [data, total] = await this.service.findByUser(payload, queryParams);
+    return { data, total };
   }
 
   @ApiOperation({ summary: 'Buscar uma matrícula' })

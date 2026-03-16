@@ -13,12 +13,15 @@ import { GetLessonDto } from './dto/get-lesson.dto';
 import { UserPayload } from '../auth/auth.service';
 import { UserRole } from 'src/enum/user.enum';
 import { CourseService } from '../course/course.service';
+import { LessonOptionEntity } from './entities/lessonOption.entity';
 
 @Injectable()
 export class LessonService {
   constructor(
     @InjectRepository(LessonEntity)
     private readonly repository: Repository<LessonEntity>,
+    @InjectRepository(LessonOptionEntity)
+    private readonly optionRepository: Repository<LessonOptionEntity>,
     private courseService: CourseService,
   ) {}
 
@@ -38,12 +41,22 @@ export class LessonService {
       .leftJoinAndSelect('lesson.course', 'course');
 
     if (payload?.role !== UserRole.ADMIN) {
-      queryBuilder.innerJoin(
-        'course.enrollments',
-        'enrollment',
-        'enrollment.user_id = :userId',
-        { userId: payload?.sub },
-      );
+      queryBuilder
+        .innerJoin(
+          'course.enrollments',
+          'enrollment',
+          'enrollment.user_id = :userId',
+          { userId: payload?.sub },
+        )
+        .where(
+          '(enrollment.isCompleted != true OR enrollment.isCompleted IS NULL)',
+        )
+        .leftJoin(
+          'lesson.attempts',
+          'attempt',
+          'attempt.enrollment_id = enrollment.id',
+        )
+        .andWhere('attempt.id IS NULL');
     }
 
     if (queryParams.title) {
@@ -112,5 +125,21 @@ export class LessonService {
 
     const response = await this.repository.delete(id);
     if (!response.affected) throw new NotFoundException('Aula não encontrada.');
+  }
+
+  async validateLessonAnswer(lessonId: string, optionId: string) {
+    const correctAnswer = await this.optionRepository
+      .createQueryBuilder('option')
+      .addSelect('option.isCorrect')
+      .where('option.isCorrect = true')
+      .andWhere('option.lessonId = :id', { id: lessonId })
+      .getOne();
+
+    if (!correctAnswer) throw new NotFoundException('Resposta não encontrada.');
+
+    return {
+      isCorrect: correctAnswer.id === optionId,
+      correctAnswer,
+    };
   }
 }

@@ -67,12 +67,15 @@ export class LessonAttemptService {
     Object.assign(entity, data);
     await this.repository.save(entity);
 
-    const isCompleted = await this.enrollmentService.validateCourseCompleted(
-      data.enrollmentId,
-    );
-    return isCompleted
-      ? 'Parabéns! Você concluiu um curso.'
-      : 'Resposta criada com sucesso.';
+    const { isCompleted, enrollment } =
+      await this.enrollmentService.validateCourseCompleted(data.enrollmentId);
+    const { isCorrect, correctAnswer } =
+      await this.lessonService.validateLessonAnswer(
+        data.lessonId,
+        data.lessonOptionId,
+      );
+
+    return { isCompleted, enrollment, isCorrect, correctAnswer };
   }
 
   async findAll(payload?: UserPayload) {

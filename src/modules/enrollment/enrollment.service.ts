@@ -14,6 +14,8 @@ import { CourseService } from '../course/course.service';
 import { UserRole } from 'src/enum/user.enum';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 import { CourseEntity } from '../course/entities/course.entity';
+import { GetEnrollmentDto } from './dto/get-enrollment.dto';
+import { CourseSubject } from 'src/enum/course.enum';
 
 @Injectable()
 export class EnrollmentService {
@@ -60,13 +62,13 @@ export class EnrollmentService {
       .andWhere('enrollment.deleted_at IS NULL')
       .getOne();
 
-    if (!enrollment) return false;
+    if (!enrollment) return { isCompleted: false, enrollment };
     const { lessonAttempts } = enrollment;
     const { lessons } = enrollment.course;
 
     const isCompleted = lessonAttempts.length === lessons.length;
 
-    if (!isCompleted) return false;
+    if (!isCompleted) return { isCompleted: false, enrollment };
 
     let correctAnswers = 0;
     lessonAttempts.forEach((attempt) => {
@@ -77,12 +79,12 @@ export class EnrollmentService {
       if (answer && answer.id === attempt.lessonOptionId) correctAnswers++;
     });
 
-    const grade = correctAnswers / lessons.length;
+    const grade = (correctAnswers / lessons.length) * 10;
 
     Object.assign(enrollment, { isCompleted: true, grade });
-    await this.repository.save(enrollment);
+    const completedEnrollment = await this.repository.save(enrollment);
 
-    return true;
+    return { isCompleted: true, enrollment: completedEnrollment };
   }
 
   async create(data: CreateEnrollmentDto, payload?: UserPayload) {
@@ -112,14 +114,52 @@ export class EnrollmentService {
     return await this.repository.find({ where: { deletedAt: undefined } });
   }
 
-  async findByUser(payload: UserPayload) {
-    return await this.repository.find({
-      where: {
-        deletedAt: undefined,
-        userId: payload.sub,
-      },
-      relations: ['course'],
-    });
+  async findByUser(payload: UserPayload, queryParams: GetEnrollmentDto) {
+    const queryBuilder = this.repository
+      .createQueryBuilder('enrollment')
+      .leftJoinAndSelect('enrollment.course', 'course');
+
+    if (payload?.role !== UserRole.ADMIN) {
+      queryBuilder.where('enrollment.user_id = :userId', {
+        userId: payload?.sub,
+      });
+    }
+
+    if (queryParams.title) {
+      queryBuilder.andWhere('course.title ILIKE :title', {
+        title: `%${queryParams.title}%`,
+      });
+    }
+
+    if (queryParams.subject?.length) {
+      const validSubject = queryParams.subject
+        .split(',')
+        .filter((subject) =>
+          Object.values(CourseSubject).includes(subject as CourseSubject),
+        );
+
+      if (validSubject.length) {
+        queryBuilder.andWhere('course.subject IN (:...status)', {
+          status: validSubject,
+        });
+      }
+    }
+
+    if (Number(queryParams.isCompleted) === 1) {
+      queryBuilder.andWhere('enrollment.isCompleted = true');
+    } else {
+      queryBuilder.andWhere('enrollment.isCompleted isNull');
+    }
+
+    if (queryParams.limit) {
+      queryBuilder.take(queryParams.limit);
+    }
+
+    if (queryParams.offset) {
+      queryBuilder.skip(queryParams.offset);
+    }
+
+    return queryBuilder.getManyAndCount();
   }
 
   async findOne(id: string, payload: UserPayload) {
