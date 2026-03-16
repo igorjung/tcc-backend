@@ -127,14 +127,19 @@ export class LessonService {
     if (!response.affected) throw new NotFoundException('Aula não encontrada.');
   }
 
-  async validateLessonAnswer(optionId: string) {
-    const option = await this.optionRepository
+  async validateLessonAnswer(lessonId: string, optionId: string) {
+    const correctAnswer = await this.optionRepository
       .createQueryBuilder('option')
       .addSelect('option.isCorrect')
-      .where('option.id = :id', { id: optionId })
+      .where('option.isCorrect = true')
+      .andWhere('option.lessonId = :id', { id: lessonId })
       .getOne();
 
-    if (!option) throw new NotFoundException('Alternativa não encontrada.');
-    return !!option.isCorrect;
+    if (!correctAnswer) throw new NotFoundException('Resposta não encontrada.');
+
+    return {
+      isCorrect: correctAnswer.id === optionId,
+      correctAnswer,
+    };
   }
 }

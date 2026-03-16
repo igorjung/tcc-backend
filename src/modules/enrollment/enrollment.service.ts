@@ -62,13 +62,13 @@ export class EnrollmentService {
       .andWhere('enrollment.deleted_at IS NULL')
       .getOne();
 
-    if (!enrollment) return false;
+    if (!enrollment) return { isCompleted: false, enrollment };
     const { lessonAttempts } = enrollment;
     const { lessons } = enrollment.course;
 
     const isCompleted = lessonAttempts.length === lessons.length;
 
-    if (!isCompleted) return false;
+    if (!isCompleted) return { isCompleted: false, enrollment };
 
     let correctAnswers = 0;
     lessonAttempts.forEach((attempt) => {
@@ -79,12 +79,12 @@ export class EnrollmentService {
       if (answer && answer.id === attempt.lessonOptionId) correctAnswers++;
     });
 
-    const grade = correctAnswers / lessons.length;
+    const grade = (correctAnswers / lessons.length) * 10;
 
     Object.assign(enrollment, { isCompleted: true, grade });
-    await this.repository.save(enrollment);
+    const completedEnrollment = await this.repository.save(enrollment);
 
-    return true;
+    return { isCompleted: true, enrollment: completedEnrollment };
   }
 
   async create(data: CreateEnrollmentDto, payload?: UserPayload) {

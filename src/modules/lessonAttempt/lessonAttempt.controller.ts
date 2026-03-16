@@ -42,11 +42,14 @@ export class LessonAttemptController {
   async create(@Req() req: UserRequest, @Body() data: CreateLessonAttemptDto) {
     const payload = req.user;
 
-    const { isCompleted, isCorrect } = await this.service.create(data, payload);
+    const { isCompleted, enrollment, isCorrect, correctAnswer } =
+      await this.service.create(data, payload);
 
     return {
       isCompleted,
+      enrollment,
       isCorrect,
+      correctAnswer,
       message: 'Resposta criada com suceso',
     };
   }
