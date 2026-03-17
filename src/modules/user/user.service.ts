@@ -132,4 +132,16 @@ export class UserService {
     Object.assign(user, { password: hashedPassword });
     return this.repository.save(user);
   }
+
+  async updateUserXp(userId: string, xp?: number) {
+    const user = await this.repository.findOneBy({ id: userId });
+    if (user === null)
+      throw new NotFoundException('O usuário não foi encontrado.');
+
+    const newXp = (user.xp ?? 0) + (xp ?? 1);
+    Object.assign(user, { xp: newXp });
+    this.repository.save(user);
+
+    return newXp;
+  }
 }

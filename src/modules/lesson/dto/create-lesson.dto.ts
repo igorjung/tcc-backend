@@ -3,8 +3,10 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsNumber,
   IsString,
   IsUUID,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import { CreateLessonOptionDto } from './create-lesson-option.dto';
@@ -47,6 +49,14 @@ export class CreateLessonDto {
   })
   @IsString({ message: 'O questionário informado é inválido' })
   question: string;
+
+  @ApiProperty({
+    description: 'Pontos de experiência ganhos ao concluír atividade',
+    default: 2,
+  })
+  @IsNumber({}, { message: 'A pontuação deve ser um valor numérico' })
+  @Min(0, { message: 'A pontuação não pode ser negativa' })
+  xp: number;
 
   @ApiProperty({
     description: 'Alternativas de resposta para o questionário da aula.',

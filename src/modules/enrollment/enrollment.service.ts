@@ -16,6 +16,7 @@ import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 import { CourseEntity } from '../course/entities/course.entity';
 import { GetEnrollmentDto } from './dto/get-enrollment.dto';
 import { CourseSubject } from 'src/enum/course.enum';
+import { isUniqueViolation } from 'src/resources/helpers/isUniqueViolation';
 
 @Injectable()
 export class EnrollmentService {
@@ -97,17 +98,20 @@ export class EnrollmentService {
     const course = await this.courseService.findOne(courseId);
     if (!course) throw new BadRequestException(`Curso não encontrado.`);
 
-    const isEnrolled = await this.repository.findOne({
-      where: { courseId, userId, deletedAt: undefined },
-    });
-    if (isEnrolled)
-      throw new BadRequestException(`Você já iniciou esse curso.`);
-
     await this.validateRequirements(course, userId);
 
     const entity = new EnrollmentEntity();
     Object.assign(entity, { user, course });
-    return await this.repository.save(entity);
+
+    try {
+      return await this.repository.save(entity);
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        throw new BadRequestException(
+          'Usuário já possuí uma matrícula para esse curso.',
+        );
+      }
+    }
   }
 
   async findAll() {
