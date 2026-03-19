@@ -8,6 +8,7 @@ import {
   JoinColumn,
   Column,
   OneToOne,
+  Unique,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -16,6 +17,7 @@ import { LessonEntity } from '../../lesson/entities/lesson.entity';
 import { LessonOptionEntity } from '../../lesson/entities/lessonOption.entity';
 
 @Entity({ name: 'lesson_attempts' })
+@Unique(['enrollmentId', 'lessonId'])
 export class LessonAttemptEntity {
   @ApiProperty({
     description: 'Id da tentativa.',

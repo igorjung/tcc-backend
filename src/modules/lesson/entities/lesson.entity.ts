@@ -90,4 +90,10 @@ export class LessonEntity {
   })
   @OneToMany(() => LessonAttemptEntity, (attempt) => attempt.lesson)
   attempts: LessonAttemptEntity[];
+
+  @ApiProperty({
+    description: 'Ponto de experiência ganhos ao concluír atividade.',
+  })
+  @Column({ type: 'float', name: 'xp', nullable: true })
+  xp?: number;
 }

@@ -103,4 +103,10 @@ export class UserEntity {
   })
   @OneToMany(() => EnrollmentEntity, (enrollment) => enrollment.user)
   enrollments: () => EnrollmentEntity[];
+
+  @ApiProperty({
+    description: 'Ponto de experiência do usuário.',
+  })
+  @Column({ type: 'float', name: 'xp', nullable: true })
+  xp?: number;
 }

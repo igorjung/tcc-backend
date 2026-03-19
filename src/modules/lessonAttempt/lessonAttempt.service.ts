@@ -13,6 +13,7 @@ import { CreateLessonAttemptDto } from './dto/create-lesson-attempt.dto';
 import { LessonService } from '../lesson/lesson.service';
 import { EnrollmentService } from '../enrollment/enrollment.service';
 import { UserService } from '../user/user.service';
+import { isUniqueViolation } from 'src/resources/helpers/isUniqueViolation';
 
 @Injectable()
 export class LessonAttemptService {
@@ -47,25 +48,25 @@ export class LessonAttemptService {
     if (!lesson.options.find((option) => option.id === data.lessonOptionId))
       throw new BadRequestException(`Alternativa de resposta não encontrada.`);
 
-    const prevAttempt = await this.repository.findOne({
-      where: {
-        enrollmentId: enrollment.id,
-        lessonId: lesson.id,
-      },
-    });
-    if (prevAttempt)
-      throw new BadRequestException(
-        `Você já respondeu esse questionário antes. É permitido apenas uma resposta por usuário.`,
-      );
+    return { xp: lesson.xp, userId: enrollment.userId };
   }
 
   async create(data: CreateLessonAttemptDto, payload: UserPayload) {
     const entity = new LessonAttemptEntity();
 
-    await this.validateCanCreateAttempt(data, payload);
-
+    const { xp, userId } = await this.validateCanCreateAttempt(data, payload);
     Object.assign(entity, data);
-    await this.repository.save(entity);
+
+    try {
+      await this.repository.save(entity);
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        throw new BadRequestException(
+          'Usuário já fez uma tentativa de resposta para essa questão.',
+        );
+      }
+      throw err;
+    }
 
     const { isCompleted, enrollment } =
       await this.enrollmentService.validateCourseCompleted(data.enrollmentId);
@@ -75,7 +76,10 @@ export class LessonAttemptService {
         data.lessonOptionId,
       );
 
-    return { isCompleted, enrollment, isCorrect, correctAnswer };
+    let userXp: number | null = null;
+    if (isCorrect) userXp = await this.userService.updateUserXp(userId, xp);
+
+    return { isCompleted, enrollment, isCorrect, correctAnswer, userXp };
   }
 
   async findAll(payload?: UserPayload) {
