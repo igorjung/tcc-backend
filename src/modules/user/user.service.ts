@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -19,10 +19,10 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly respository: Repository<UserEntity>,
+    private readonly repository: Repository<UserEntity>,
   ) {}
 
-  private validateUserPermission(id: string, payload?: UserPayload) {
+  validateUserPermission(id: string, payload?: UserPayload) {
     if (payload?.sub !== id && payload?.role !== UserRole.ADMIN) {
       throw new UnauthorizedException(
         'O usuário não tem permissão para realizar essa ação.',
@@ -41,20 +41,32 @@ export class UserService {
     }
   }
 
+  private async validateEmailUnique(
+    id: string,
+    data: UpdateUserDto | CreateUserDto,
+  ) {
+    const userWithSameEmail = await this.repository.findOneBy({
+      id: Not(id),
+      email: data.email,
+    });
+    if (userWithSameEmail !== null)
+      throw new BadRequestException('O email inserido já está em uso');
+  }
+
   async create(data: CreateUserDto, payload?: UserPayload) {
     this.validateCanCreateAdmin(data, payload);
     const entity = new UserEntity();
     Object.assign(entity, data);
-    return await this.respository.save(entity);
+    return await this.repository.save(entity);
   }
 
   async findAll() {
-    return await this.respository.find({ where: { deletedAt: undefined } });
+    return await this.repository.find({ where: { deletedAt: undefined } });
   }
 
   async findOne(id: string, payload?: UserPayload) {
     this.validateUserPermission(id, payload);
-    const user = await this.respository.findOneBy({ id, deletedAt: undefined });
+    const user = await this.repository.findOneBy({ id, deletedAt: undefined });
     if (!user) throw new NotFoundException(`Usário não encontrado.`);
     return user;
   }
@@ -62,27 +74,35 @@ export class UserService {
   async update(id: string, data: UpdateUserDto, payload?: UserPayload) {
     this.validateUserPermission(id, payload);
     this.validateCanCreateAdmin(data, payload);
-    const user = await this.respository.findOneBy({ id });
+    await this.validateEmailUnique(id, data);
+
+    const user = await this.repository.findOneBy({ id });
     if (user === null)
       throw new NotFoundException('O usuário não foi encontrado.');
     Object.assign(user, data);
-    return this.respository.save(user);
+    return this.repository.save(user);
   }
 
   async remove(id: string, payload?: UserPayload) {
     this.validateUserPermission(id, payload);
-    const response = await this.respository.delete(id);
+    const response = await this.repository.delete(id);
     if (!response.affected)
       throw new NotFoundException('O usuário não foi encontrado.');
   }
 
-  async findOneByEmail(email: string) {
-    const user = await this.respository.findOneBy({
+  async findOneByEmail(email: string, isAuthRequest?: boolean) {
+    const user = await this.repository.findOneBy({
       email,
       deletedAt: undefined,
     });
-    if (!user)
-      throw new NotFoundException(`Este email não pertence a um usuário.`);
+
+    if (!user) {
+      if (!isAuthRequest)
+        throw new NotFoundException(`Este email não pertence a um usuário.`);
+      else
+        throw new UnauthorizedException('O email ou a senha está incorreto.');
+    }
+
     return user;
   }
 
@@ -91,7 +111,7 @@ export class UserService {
     data: UpdatePasswordDto,
     hashedPassword: string,
   ) {
-    const user = await this.respository.findOneBy({ id });
+    const user = await this.repository.findOneBy({ id });
 
     if (user === null)
       throw new NotFoundException('O usuário não foi encontrado.');
@@ -110,6 +130,18 @@ export class UserService {
       );
 
     Object.assign(user, { password: hashedPassword });
-    return this.respository.save(user);
+    return this.repository.save(user);
+  }
+
+  async updateUserXp(userId: string, xp?: number) {
+    const user = await this.repository.findOneBy({ id: userId });
+    if (user === null)
+      throw new NotFoundException('O usuário não foi encontrado.');
+
+    const newXp = (user.xp ?? 0) + (xp ?? 1);
+    Object.assign(user, { xp: newXp });
+    this.repository.save(user);
+
+    return newXp;
   }
 }

@@ -5,6 +5,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   PrimaryGeneratedColumn,
+  OneToMany,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -14,6 +15,7 @@ import {
   UserExperience,
   UserRole,
 } from '../../../enum/user.enum';
+import { EnrollmentEntity } from '../../enrollment/entities/enrollmen.entity';
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -95,4 +97,16 @@ export class UserEntity {
   })
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: string;
+
+  @ApiProperty({
+    description: 'Matrículas do usuário.',
+  })
+  @OneToMany(() => EnrollmentEntity, (enrollment) => enrollment.user)
+  enrollments: () => EnrollmentEntity[];
+
+  @ApiProperty({
+    description: 'Ponto de experiência do usuário.',
+  })
+  @Column({ type: 'float', name: 'xp', nullable: true })
+  xp?: number;
 }
