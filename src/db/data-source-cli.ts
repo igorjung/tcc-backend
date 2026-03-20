@@ -12,6 +12,9 @@ const dataSourceOptions: DataSourceOptions & SeederOptions = {
   entities: [__dirname + '/../**/*.entity.{js,ts}'],
   migrations: [__dirname + '/migrations/*.{js,ts}'],
   seeds: [__dirname + '/seeds/*.{js,ts}'],
+  ssl: {
+    rejectUnauthorized: false,
+  },
 };
 
 const dataSource = new DataSource(dataSourceOptions);
