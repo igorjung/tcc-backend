@@ -122,11 +122,10 @@ export class UserController {
     return this.service.findAll();
   }
 
-  @ApiOperation({ summary: 'Buscar um usuário' })
+  @ApiOperation({ summary: 'Buscar relatório de um usuário' })
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,
-    type: UserEntity,
   })
   @ApiResponse({
     status: 404,
