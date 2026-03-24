@@ -47,7 +47,7 @@ export class LessonAttemptEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'lesson_id' })
-  lesson: () => LessonEntity;
+  lesson: LessonEntity;
   @Column({ name: 'lesson_id' })
   lessonId: string;
 
@@ -56,7 +56,7 @@ export class LessonAttemptEntity {
   })
   @OneToOne(() => LessonOptionEntity, (option) => option.id)
   @JoinColumn({ name: 'lesson_option_id' })
-  lessonOption: () => LessonOptionEntity;
+  lessonOption: LessonOptionEntity;
   @Column({ name: 'lesson_option_id', nullable: true })
   lessonOptionId: string;
 

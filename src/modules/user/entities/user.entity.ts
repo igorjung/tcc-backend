@@ -102,7 +102,7 @@ export class UserEntity {
     description: 'Matrículas do usuário.',
   })
   @OneToMany(() => EnrollmentEntity, (enrollment) => enrollment.user)
-  enrollments: () => EnrollmentEntity[];
+  enrollments: EnrollmentEntity[];
 
   @ApiProperty({
     description: 'Ponto de experiência do usuário.',

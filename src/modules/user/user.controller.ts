@@ -122,6 +122,26 @@ export class UserController {
     return this.service.findAll();
   }
 
+  @ApiOperation({ summary: 'Buscar relatório de um usuário' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Usário não encontrado.',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Erro interno.',
+  })
+  @Get(':id/activity-summary')
+  @UseGuards(AuthGuard)
+  async getActivitySummary(@Req() req: UserRequest, @Param('id') id: string) {
+    const payload = req.user;
+    return await this.service.getActivitySummary(id, payload);
+  }
+
   @ApiOperation({ summary: 'Buscar um usuário' })
   @ApiBearerAuth()
   @ApiResponse({
