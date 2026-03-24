@@ -144,4 +144,85 @@ export class UserService {
 
     return newXp;
   }
+
+  async getActivitySummary(id: string, payload?: UserPayload) {
+    this.validateUserPermission(id, payload);
+    const user = await this.repository
+      .createQueryBuilder('user')
+      .where('user.id = :userId', {
+        userId: id,
+      })
+      .leftJoinAndSelect('user.enrollments', 'enrollments')
+      .leftJoinAndSelect('enrollments.course', 'course')
+      .leftJoinAndSelect('enrollments.lessonAttempts', 'attempts')
+      .leftJoinAndSelect('attempts.lesson', 'lesson')
+      .leftJoinAndSelect('attempts.lessonOption', 'option')
+      .addSelect('option.isCorrect')
+      .select([
+        'user.id',
+        'user.name',
+        'user.email',
+        'user.birth_date',
+        'user.experience',
+        'user.availability',
+
+        'enrollments.id',
+        'enrollments.grade',
+        'enrollments.isCompleted',
+
+        'course.id',
+        'course.title',
+        'course.subject',
+
+        'attempts.id',
+        'attempts.createdAt',
+
+        'lesson.id',
+        'lesson.title',
+
+        'option.id',
+        'option.isCorrect',
+      ])
+      .getOne();
+
+    const userData = {
+      id: user?.id,
+      name: user?.name,
+      email: user?.email,
+      birthDate: user?.birthDate,
+      experience: user?.experience,
+      availability: user?.availability,
+    };
+
+    const completedCourses = user?.enrollments
+      .filter((enrollment) => enrollment.isCompleted)
+      .map((enrollment) => ({
+        title: enrollment.course.title,
+        subject: enrollment.course.subject,
+        grade: enrollment.grade,
+      }));
+
+    const ongoingCourses = user?.enrollments
+      .filter((enrollment) => !!enrollment.isCompleted)
+      .map((enrollment) => ({
+        title: enrollment.course.title,
+        subject: enrollment.course.subject,
+      }));
+
+    const completedLessons = user?.enrollments.map((enrollment) =>
+      enrollment.lessonAttempts.map((attempt) => ({
+        title: attempt.lesson.title,
+        subject: enrollment.course.subject,
+        isCorrect: attempt.lessonOption.isCorrect,
+        createdAt: attempt.createdAt,
+      })),
+    );
+
+    return {
+      user: userData,
+      completedCourses,
+      ongoingCourses,
+      completedLessons,
+    };
+  }
 }
