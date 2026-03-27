@@ -95,10 +95,9 @@ export class CourseService {
       queryBuilder.skip(queryParams.offset);
     }
 
-    queryBuilder.leftJoinAndSelect(
-      'course.requirements',
-      'course_requirements',
-    );
+    queryBuilder
+      .leftJoinAndSelect('course.requirements', 'course_requirements')
+      .orderBy('course.createdAt', 'ASC');
 
     const [courses, total] = await queryBuilder.getManyAndCount();
 
