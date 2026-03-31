@@ -60,6 +60,7 @@ export class LessonAttemptService {
     try {
       await this.repository.save(entity);
     } catch (err) {
+      console.log(err);
       if (isUniqueViolation(err)) {
         throw new BadRequestException(
           'Usuário já fez uma tentativa de resposta para essa questão.',

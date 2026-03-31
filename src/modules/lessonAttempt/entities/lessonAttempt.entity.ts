@@ -7,7 +7,6 @@ import {
   ManyToOne,
   JoinColumn,
   Column,
-  OneToOne,
   Unique,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
@@ -54,7 +53,10 @@ export class LessonAttemptEntity {
   @ApiProperty({
     description: 'Id da alternativa escolhida.',
   })
-  @OneToOne(() => LessonOptionEntity, (option) => option.id)
+  @ManyToOne(() => LessonOptionEntity, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'lesson_option_id' })
   lessonOption: LessonOptionEntity;
   @Column({ name: 'lesson_option_id', nullable: true })
