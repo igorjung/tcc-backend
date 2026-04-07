@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsDateString,
   IsEmail,
   IsEnum,
   IsNotEmpty,
@@ -47,8 +46,8 @@ export class CreateUserDto {
     default: '2021-06-11T00:00',
   })
   @IsNotEmpty({ message: 'A data de aniversário não pode ser vazia' })
-  @IsDateString()
-  birthDate: Date;
+  @IsString({ message: 'A data de aniversário informada é inválida' })
+  birthDate: string;
 
   @ApiProperty({
     description: 'Função do usuário.',

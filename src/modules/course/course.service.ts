@@ -9,11 +9,6 @@ import { GetCourseDto } from './dto/get-course.dto';
 import { CourseSubject } from 'src/enum/course.enum';
 import { UserPayload } from '../auth/auth.service';
 
-interface RequirementCountRow {
-  rootCourseId: string;
-  total: string;
-}
-
 @Injectable()
 export class CourseService {
   constructor(
@@ -97,57 +92,9 @@ export class CourseService {
 
     queryBuilder
       .leftJoinAndSelect('course.requirements', 'course_requirements')
-      .orderBy('course.createdAt', 'ASC');
+      .orderBy('course.difficulty', 'ASC');
 
-    const [courses, total] = await queryBuilder.getManyAndCount();
-
-    const courseIds = courses.map((c) => c.id);
-
-    if (!courseIds.length) {
-      return [[], total];
-    }
-
-    const requirementCount = await this.repository.query<RequirementCountRow[]>(
-      `
-        WITH RECURSIVE requirement_tree AS (
-          SELECT
-            cr.course_id AS "rootCourseId",
-            cr.requirement_id AS "requirementId"
-          FROM course_requirements cr
-          WHERE cr.course_id = ANY($1)
-
-          UNION ALL
-
-          SELECT
-            rt."rootCourseId",
-            cr.requirement_id
-          FROM requirement_tree rt
-          JOIN course_requirements cr
-            ON cr.course_id = rt."requirementId"
-        )
-        SELECT
-          "rootCourseId",
-          COUNT(DISTINCT "requirementId")::int AS "total"
-        FROM requirement_tree
-        GROUP BY "rootCourseId";
-      `,
-      [courseIds],
-    );
-
-    const countMap = new Map(
-      requirementCount.map((c) => [c.rootCourseId, Number(c.total)]),
-    );
-
-    const data = courses.map((course) => {
-      const count = countMap.get(course.id) ?? 0;
-
-      return {
-        ...course,
-        requirementCount: count,
-      };
-    });
-
-    return [data, total];
+    return await queryBuilder.getManyAndCount();
   }
 
   async findOne(id: string) {

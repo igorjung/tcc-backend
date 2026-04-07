@@ -44,7 +44,7 @@ export class UserEntity {
   @ApiProperty({
     description: 'Data de nascimento do usuário.',
   })
-  @Column({ type: 'date', name: 'birth_date', nullable: true })
+  @Column({ name: 'birth_date', nullable: true })
   birthDate: string;
 
   @ApiProperty({
