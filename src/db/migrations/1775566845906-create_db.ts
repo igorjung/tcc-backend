@@ -1,38 +1,26 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateDb1773834215942 implements MigrationInterface {
-  name = 'CreateDb1773834215942';
+export class CreateDb1775566845906 implements MigrationInterface {
+  name = 'CreateDb1775566845906';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
       `CREATE TABLE "lesson_options" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "lesson_id" uuid NOT NULL, "content" character varying NOT NULL, "is_correct" boolean, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_a9e9bfa3d35ba1eb9643a399f99" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "lesson_attempts" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "enrollment_id" uuid NOT NULL, "lesson_id" uuid NOT NULL, "lesson_option_id" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "UQ_fdc73044106e1a442587642b2e6" UNIQUE ("enrollment_id", "lesson_id"), CONSTRAINT "REL_4d39ad28743d68a3dca73773cd" UNIQUE ("lesson_option_id"), CONSTRAINT "PK_f77f6a55976c55b6639d7136578" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "lesson_attempts" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "enrollment_id" uuid NOT NULL, "lesson_id" uuid NOT NULL, "lesson_option_id" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "UQ_fdc73044106e1a442587642b2e6" UNIQUE ("enrollment_id", "lesson_id"), CONSTRAINT "PK_f77f6a55976c55b6639d7136578" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "lessons" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "course_id" uuid NOT NULL, "title" character varying(100) NOT NULL, "description" character varying(500) NOT NULL, "content" character varying NOT NULL, "question" character varying(500) NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "xp" double precision, CONSTRAINT "PK_9b9a8d455cac672d262d7275730" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TYPE "public"."courses_subject_enum" AS ENUM('HTML', 'CSS', 'JS')`,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "courses" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "title" character varying(100) NOT NULL, "description" character varying(500) NOT NULL, "subject" "public"."courses_subject_enum" NOT NULL DEFAULT 'JS', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_3f70a487cc718ad8eda4e6d58c9" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "courses" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "title" character varying(100) NOT NULL, "description" character varying(500) NOT NULL, "subject" "public"."courses_subject_enum" NOT NULL DEFAULT 'JS', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "difficulty" integer NOT NULL, CONSTRAINT "PK_3f70a487cc718ad8eda4e6d58c9" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "enrollments" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "course_id" uuid NOT NULL, "grade" double precision, "is_completed" boolean, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "UQ_647c6bda9ead37b702421710fde" UNIQUE ("user_id", "course_id"), CONSTRAINT "PK_7c0f752f9fb68bf6ed7367ab00f" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TYPE "public"."users_role_enum" AS ENUM('ADMIN', 'STUDENT')`,
-    );
-    await queryRunner.query(
-      `CREATE TYPE "public"."users_experience_enum" AS ENUM('BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT')`,
-    );
-    await queryRunner.query(
-      `CREATE TYPE "public"."users_availability_enum" AS ENUM('LESS_THAN_30_MIN', '30_TO_60_MIN', '1_TO_2_HOURS', 'MORE_THAN_2_HOURS')`,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(100) NOT NULL, "email" character varying(70) NOT NULL, "password" character varying(255) NOT NULL, "birth_date" date, "role" "public"."users_role_enum" NOT NULL DEFAULT 'STUDENT', "experience" "public"."users_experience_enum", "availability" "public"."users_availability_enum", "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "xp" double precision, CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(100) NOT NULL, "email" character varying(70) NOT NULL, "password" character varying(255) NOT NULL, "birth_date" character varying, "role" "public"."users_role_enum" NOT NULL DEFAULT 'STUDENT', "experience" "public"."users_experience_enum", "availability" "public"."users_availability_enum", "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "xp" double precision, CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "course_requirements" ("course_id" uuid NOT NULL, "requirement_id" uuid NOT NULL, CONSTRAINT "PK_6a01e2f457ca52c2a45d4914bc2" PRIMARY KEY ("course_id", "requirement_id"))`,
@@ -53,7 +41,7 @@ export class CreateDb1773834215942 implements MigrationInterface {
       `ALTER TABLE "lesson_attempts" ADD CONSTRAINT "FK_1c23b47d5ea764a62d6f61bad7d" FOREIGN KEY ("lesson_id") REFERENCES "lessons"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "lesson_attempts" ADD CONSTRAINT "FK_4d39ad28743d68a3dca73773cd3" FOREIGN KEY ("lesson_option_id") REFERENCES "lesson_options"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "lesson_attempts" ADD CONSTRAINT "FK_4d39ad28743d68a3dca73773cd3" FOREIGN KEY ("lesson_option_id") REFERENCES "lesson_options"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "lessons" ADD CONSTRAINT "FK_3c4e299cf8ed04093935e2e22fe" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
@@ -108,12 +96,8 @@ export class CreateDb1773834215942 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE "course_requirements"`);
     await queryRunner.query(`DROP TABLE "users"`);
-    await queryRunner.query(`DROP TYPE "public"."users_availability_enum"`);
-    await queryRunner.query(`DROP TYPE "public"."users_experience_enum"`);
-    await queryRunner.query(`DROP TYPE "public"."users_role_enum"`);
     await queryRunner.query(`DROP TABLE "enrollments"`);
     await queryRunner.query(`DROP TABLE "courses"`);
-    await queryRunner.query(`DROP TYPE "public"."courses_subject_enum"`);
     await queryRunner.query(`DROP TABLE "lessons"`);
     await queryRunner.query(`DROP TABLE "lesson_attempts"`);
     await queryRunner.query(`DROP TABLE "lesson_options"`);
