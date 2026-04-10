@@ -20,6 +20,13 @@ export class CreateCourseDto {
   description: string;
 
   @ApiProperty({
+    description: 'Dificuldade do curso.',
+    default: 0,
+  })
+  @IsString({ message: 'A dificuldade informado é inválida' })
+  difficulty: 0;
+
+  @ApiProperty({
     description: 'Tema do curso.',
     default: 'JS',
   })

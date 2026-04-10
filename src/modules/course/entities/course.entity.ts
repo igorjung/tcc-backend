@@ -93,4 +93,10 @@ export class CourseEntity {
   })
   @OneToMany(() => LessonEntity, (lesson) => lesson.course)
   lessons: LessonEntity[];
+
+  @ApiProperty({
+    description: 'Dificuldade do curso.',
+  })
+  @Column({ name: 'difficulty' })
+  difficulty: number;
 }

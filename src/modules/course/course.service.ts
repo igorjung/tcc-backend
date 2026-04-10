@@ -90,12 +90,11 @@ export class CourseService {
       queryBuilder.skip(queryParams.offset);
     }
 
-    queryBuilder.leftJoinAndSelect(
-      'course.requirements',
-      'course_requirements',
-    );
+    queryBuilder
+      .leftJoinAndSelect('course.requirements', 'course_requirements')
+      .orderBy('course.difficulty', 'ASC');
 
-    return queryBuilder.getManyAndCount();
+    return await queryBuilder.getManyAndCount();
   }
 
   async findOne(id: string) {

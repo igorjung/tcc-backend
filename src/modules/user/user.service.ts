@@ -14,6 +14,7 @@ import { UserEntity } from './entities/user.entity';
 import { UserRole } from 'src/enum/user.enum';
 import { UserPayload } from '../auth/auth.service';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { CourseSubject } from 'src/enum/course.enum';
 
 @Injectable()
 export class UserService {
@@ -183,6 +184,10 @@ export class UserService {
         'option.id',
         'option.isCorrect',
       ])
+      .orderBy('enrollments.createdAt', 'DESC')
+      .addOrderBy('course.createdAt', 'DESC')
+      .addOrderBy('attempts.createdAt', 'DESC')
+      .addOrderBy('lesson.createdAt', 'DESC')
       .getOne();
 
     const userData = {
@@ -209,14 +214,23 @@ export class UserService {
         subject: enrollment.course.subject,
       }));
 
-    const completedLessons = user?.enrollments.map((enrollment) =>
-      enrollment.lessonAttempts.map((attempt) => ({
-        title: attempt.lesson.title,
-        subject: enrollment.course.subject,
-        isCorrect: attempt.lessonOption.isCorrect,
-        createdAt: attempt.createdAt,
-      })),
-    );
+    const completedLessons: {
+      title: string;
+      subject: CourseSubject;
+      isCorrect: boolean;
+      createdAt: string;
+    }[] = [];
+
+    user?.enrollments.forEach((enrollment) => {
+      enrollment.lessonAttempts.forEach((attempt) => {
+        completedLessons.push({
+          title: attempt.lesson.title,
+          subject: enrollment.course.subject,
+          isCorrect: attempt.lessonOption.isCorrect,
+          createdAt: attempt.createdAt,
+        });
+      });
+    });
 
     return {
       user: userData,
