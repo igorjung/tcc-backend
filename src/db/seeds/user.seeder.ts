@@ -17,7 +17,7 @@ export default class UserSeeder implements Seeder {
         name: 'Admin User',
         email: process.env.ADMIN_USER,
         password: await bcrypt.hash(process.env.ADMIN_PASSWORD ?? '', 10),
-        birthDate: '2021-06-11T00:00',
+        birthDate: '2001-06-11T00:00',
         role: UserRole.ADMIN,
         experience: UserExperience.ADVANCED,
         availability: UserAvailability.MORE_THAN_2_HOURS,
